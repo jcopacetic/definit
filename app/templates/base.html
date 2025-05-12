@@ -1,0 +1,87 @@
+
+{% load static i18n %}
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>{% block title %}DefinIT Apps{% endblock title %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Behold My Awesome Project!" />
+  <meta name="author" content="Jonathan Sumner" />
+  <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/css/bootstrap.min.css" 
+    integrity="sha512-72OVeAaPeV8n3BdZj7hOkaPSEk/uwpDkaGyP4W2jSzAC8tfiO4LMEDWoL3uFp5mcZu+8Eehb4GhZWFwvrss69Q==" 
+    crossorigin="anonymous" 
+    referrerpolicy="no-referrer" />
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" 
+    integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" 
+    crossorigin="anonymous" 
+    referrerpolicy="no-referrer" />
+  <link href="{% static 'css/project.css' %}" rel="stylesheet" />
+
+  {% block css %}{% endblock css %}
+
+  <script 
+    defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js" integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"
+    integrity="sha512-JvpjarJlOl4sW26MnEb3IdSAcGdeTeOaAlu2gUZtfFrRgnChdzELOZKl0mN6ZvI0X+xiX5UMvxjK2Rx2z/fliw=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <script defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/ext/ws.min.js"
+      integrity="sha512-CSx03yyZNG38wNKeZfkjeeG+v7xVUvLAzwdUNvjKGLFpT80PisnjnclZJohj6XJyqIYusgZQrdFUrVgrnu/Jew=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"></script>
+  <script defer src="{% static 'js/project.js' %}"></script>
+  
+  <script defer src="{% static 'js/project.js' %}"></script>
+
+  {% block javascript %}{% endblock javascript %}
+
+</head>
+<body class="{% block bodyclass %}{% endblock bodyclass %} definit">
+  {% block body %}
+    {% include "snippets/navbar.html" with request=request %}
+    <div class="workspace">
+      {% if request.user.is_authenticated %}
+        {% include "snippets/sidebar.html" with request=request %}
+      {% endif %}
+      <div class="site-stage">
+        {% if messages %}
+          {% include "snippets/messages.html" with messages=messages %}
+        {% endif %}
+
+        {% block main %}
+          {% block content %}
+            <p>Use this document as a way to quick start any new project.</p>
+          {% endblock content %}
+        {% endblock main %}
+      </div>
+    </div>
+  {% endblock body %}
+
+  {% block modal %}{% endblock modal %}
+
+  {% block sidepanel %}
+    {% include "snippets/sidepanel.html" with control_class="" %}
+  {% endblock sidepanel %}
+
+  <script>
+    document.body.addEventListener("htmx:configRequest", (event) => {
+      event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+    });
+  </script>
+
+  {% block inline_javascript %}{% endblock inline_javascript %}
+
+</body>
+</html>

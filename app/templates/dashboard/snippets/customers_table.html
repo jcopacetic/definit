@@ -1,0 +1,33 @@
+<div id="customers-table" hx-swap-oob="outerHTML" class="card mt-5">
+    <div class="card-header">
+        <h3>Customers</h3>
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+        {% if customers|length %}
+        {% for customer in customers %}
+            <li class="list-group-item d-flex justify-content-between">
+                <a 
+                    hx-get="{% url 'dashboard:get-customer' customer_slug=customer.slug %}"
+                    hx-swap="none"
+                    href="#">{{customer.name}}</a>
+                
+                <a href="{% url 'dashboard:customer' customer_slug=customer.slug %}">view</a>
+
+            </li>
+        {% endfor %}
+        {% else %}
+            <li class="list-group-item">
+                <em class="text-muted">no customers</em>
+            </li>
+        {% endif %}
+        </ul>
+    </div>
+    <div class="card-footer">
+        <a 
+            hx-get="{% url 'dashboard:create-customer' %}"
+            hx-swap="none"
+            href="#" 
+            class="btn btn-primary">Add Customer</a>
+    </div>
+</div>

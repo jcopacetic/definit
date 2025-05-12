@@ -1,0 +1,12 @@
+{% extends "../base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h1>Dashboard</h1>
+            {% include "dashboard/snippets/customers_table.html" with customers=dashboard.customers.all %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,338 @@
+/* These styles are generated from project.scss. */
+
+.alert-debug {
+  color: black;
+  background-color: white;
+  border-color: #d6e9c6;
+}
+
+.alert-error {
+  color: #b94a48;
+  background-color: #f2dede;
+  border-color: #eed3d7;
+}
+
+.navbar .navbar-brand img {
+  width: 204px;
+  height: 54px;
+}
+
+
+
+:root {
+--font-family_1: "Roboto", sans-serif;
+--bm-gray-1: #F5F6F7;
+--bm-gray-2: #EAECEE;
+--bm-gray-3: #D5DADD;
+--bm-gray-4: #A9B4BE;
+--bm-gray-5: #8396A8;
+--bm-gray-6: #5B738B;
+--bm-gray-7: #475E75;
+--bm-gray-8: #354A5F;
+--bm-gray-9: #223548;
+--bm-gray-10: #1A2733;
+--bm-gray-11: #12171C;
+
+--bm-red-1: #FFEAF4;
+--bm-red-2: #FFD5EA;
+--bm-red-3: #FFB2D2;
+--bm-red-4: #FF8CB2;
+--bm-red-5: #FF5C77;
+--bm-red-6: #EE3939;
+--bm-red-7: #D20A0A;
+--bm-red-8: #AA0808;
+--bm-red-9: #840606;
+--bm-red-10: #5A0404;
+--bm-red-11: #350000;
+
+--bm-yellow-1: #FFF8D6;
+--bm-yellow-2: #FFF3B8;
+--bm-yellow-3: #FFDF72;
+--bm-yellow-4: #FFC933;
+--bm-yellow-5: #FFB300;
+--bm-yellow-6: #E76500;
+--bm-yellow-7: #C35500;
+--bm-yellow-8: #A93E00;
+--bm-yellow-9: #8D2A00;
+--bm-yellow-10: #6D1900;
+--bm-yellow-11: #450B00;
+
+--bm-green-1: #F5FAE5;
+--bm-green-2: #EBF5CB;
+--bm-green-3: #BDE986;
+--bm-green-4: #97DD40;
+--bm-green-5: #5DC122;
+--bm-green-6: #36A41D;
+--bm-green-7: #188918;
+--bm-green-8: #256F3A;
+--bm-green-9: #1E592F;
+--bm-green-10: #164323;
+--bm-green-11: #0E2B16;
+
+--bm-teal-1: #DAFDF5;
+--bm-teal-2: #C2FCEE;
+--bm-teal-3: #64EDD2;
+--bm-teal-4: #2CE0BF;
+--bm-teal-5: #00CEAC;
+--bm-teal-6: #049F9A;
+--bm-teal-7: #07838F;
+--bm-teal-8: #046C7A;
+--bm-teal-9: #035663;
+--bm-teal-10: #02414C;
+--bm-teal-11: #012931;
+
+--bm-blue-1: #EBF8FF;
+--bm-blue-2: #D1EFFF;
+--bm-blue-3: #A6E0FF;
+--bm-blue-4: #89D1FF;
+--bm-blue-5: #4DB1FF;
+--bm-blue-6: #1B90FF;
+--bm-blue-7: #0070F2;
+--bm-blue-8: #0057D2;
+--bm-blue-9: #0040B0;
+--bm-blue-10: #002A86;
+--bm-blue-11: #00144A;
+
+--bm-indigo-1: #F1ECFF;
+--bm-indigo-2: #E2D8FF;
+--bm-indigo-3: #D3B6FF;
+--bm-indigo-4: #B894FF;
+--bm-indigo-5: #9B76FF;
+--bm-indigo-6: #7858FF;
+--bm-indigo-7: #5D36FF;
+--bm-indigo-8: #470CED;
+--bm-indigo-9: #2C13AD;
+--bm-indigo-10: #1C0C6E;
+--bm-indigo-11: #0E0637;
+
+--bm-pink-1: #FFF0FA;
+--bm-pink-2: #FFDCF3;
+--bm-pink-3: #FFAFED;
+--bm-pink-4: #FF8AF0;
+--bm-pink-5: #F65AF2;
+--bm-pink-6: #F31DED;
+--bm-pink-7: #CC00DC;
+--bm-pink-8: #A100C2;
+--bm-pink-9: #7800A4;
+--bm-pink-10: #510080;
+--bm-pink-11: #28004A;
+
+--bm-rasp-1: #FFF0F5;
+--bm-rasp-2: #FFDCE8;
+--bm-rasp-3: #FECBDA;
+--bm-rasp-4: #FEADC8;
+--bm-rasp-5: #FE83AE;
+--bm-rasp-6: #FA4F96;
+--bm-rasp-7: #DF1278;
+--bm-rasp-8: #BA066C;
+--bm-rasp-9: #9B015D;
+--bm-rasp-10: #71014B;
+--bm-rasp-11: #510136;
+
+--bm-light: #FFFFFF;
+--bm-dark: #000000;
+
+/* Grayscale (based on #111827 & #0A192F) */
+--kd-gray-1: #F5F6F7;
+--kd-gray-2: #E5E7EB;
+--kd-gray-3: #D1D5DB;
+--kd-gray-4: #9CA3AF;
+--kd-gray-5: #6B7280;
+--kd-gray-6: #4B5563;
+--kd-gray-7: #374151;
+--kd-gray-8: #1F2937;
+--kd-gray-9: #111827;
+--kd-gray-10: #0A192F;
+--kd-gray-11: #070D14;
+
+/* Primary Teal (#00C2CB) */
+--kd-teal-1: #E0FCFD;
+--kd-teal-2: #B3F4F6;
+--kd-teal-3: #80EDF0;
+--kd-teal-4: #4BE5EA;
+--kd-teal-5: #00C2CB;
+--kd-teal-6: #00A2AA;
+--kd-teal-7: #00868E;
+--kd-teal-8: #006E75;
+--kd-teal-9: #00545A;
+--kd-teal-10: #003F43;
+--kd-teal-11: #00292D;
+
+/* Accent Orange (#FF6A00) */
+--kd-orange-1: #FFF3E6;
+--kd-orange-2: #FFE0C2;
+--kd-orange-3: #FFBC7A;
+--kd-orange-4: #FF9440;
+--kd-orange-5: #FF6A00;
+--kd-orange-6: #DB5700;
+--kd-orange-7: #B74600;
+--kd-orange-8: #933600;
+--kd-orange-9: #702800;
+--kd-orange-10: #4D1B00;
+--kd-orange-11: #2B0F00;
+
+/* Light and dark */
+--kd-light: #FFFFFF;
+--kd-dark: #000000;
+}
+
+
+html body {
+  overflow: hidden;
+}
+
+.navbar.navbar-light {
+  background: #fff;
+}
+
+.definit .site-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  background: var(--kd-light);
+}
+
+.definit .workspace {
+  position: fixed;
+  top: 80px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--kd-gray-1);
+  z-index: 1;
+}
+
+.definit .site-sidebar {
+  position: fixed;
+  top: 80px;
+  left: 0;
+  right: auto;
+  bottom: 0;
+  background: var(--kd-dark);
+  width: 220px;
+  overflow-y: auto;
+  padding: 30px 0;
+  z-index: 2;
+}
+
+.definit .site-sidebar ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: block;
+}
+
+.definit .site-sidebar ul li {
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+.definit .site-sidebar ul li a {
+    display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--kd-light);
+  padding: 12px 15px;
+  transition: .2s ease all;
+  -webkit-transition: .2s ease all;
+}
+
+.definit .site-sidebar ul li a svg {
+  height: 26px;
+  width: 26px;
+  margin-right: 16px;
+  transition: .2s ease all;
+  -webkit-transition: .2s ease all;
+}
+
+.definit .site-sidebar ul li a svg path {
+  fill: var(--kd-orange-4);
+}
+
+
+.definit .site-sidebar ul li a:hover {
+  color: var(--kd-orange-7);
+  transition: .2s ease all;
+  -webkit-transition: .2s ease all;
+}
+
+.definit .site-sidebar ul li a:hover svg {
+  margin-right: 20px;
+  transition: .2s ease all;
+  -webkit-transition: .2s ease all;
+}
+
+.definit .site-stage {
+  position: fixed;
+  top: 80px;
+  left: 220px;
+  right: 0;
+  bottom: 0;
+  background: var(--kd-light);
+  overflow-y: auto;
+  padding: 30px;
+  z-index: 2;
+}
+
+.definit .site-sidepanel-overlay {
+  position: fixed;
+  z-index: 3;
+  top: 80px;
+  right: auto;
+  left: 100%;
+  bottom: 0;
+  background: rgba(0,0,0,.9);
+  transition: .2s ease all;
+  -webkit-transition: .2s ease all;
+}
+
+.definit .site-sidepanel-overlay.active {
+  right: 0;
+  left: 220px;
+  transition: .2s ease all;
+  -webkit-transition: .2s ease all;
+}
+
+.definit .site-sidepanel {
+  position: fixed;
+  top: 80px;
+  right: auto;
+  bottom: 0;
+  left: 100%;
+  width: 400px;
+  background: var(--kd-light);
+  overflow-y: auto;
+  padding: 30px 30px 114px;
+  transition: .2s ease all;
+  -webkit-transition: .2s ease all;
+}
+
+.definit .site-sidepanel-overlay.active .site-sidepanel {
+  right: 0;
+  left: auto;
+}
+
+.definit .site-sidepanel .actions {
+  position: fixed; 
+  bottom: 0px;
+  left: 100%;
+  right: auto;
+  top: auto;
+  width: 400px;
+  background: #fff;
+  padding: 10px 30px 20px;
+  transition: .8s ease all;
+  -webkit-transition: .8s ease all;
+}
+
+.definit .site-sidepanel-overlay.active .site-sidepanel .actions {
+  left: auto;
+  right: 0;
+  transition: .8s ease all;
+  -webkit-transition: .8s ease all;
+}

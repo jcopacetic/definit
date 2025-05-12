@@ -1,0 +1,52 @@
+{% extends "../base.html" %}
+{% load basic_filter %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Customer</h1>
+            <hr>
+            <h2>{{customer.name}}</h2>
+            <h5>{{customer.domain}}</h5>
+            <hr>
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Check</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field, passed in customer.connection_checks.items %}
+                        <tr>
+                            <td>
+                                {{ field|capfirst|replace_underscores }}
+                            </td>
+                            <td>
+                                {% if passed %}
+                                    <span class="text-success fw-bold">✅</span>
+                                {% else %}
+                                    <span class="text-danger fw-bold">❌</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h2>Features</h2>
+            <ul class="list-group">
+                {% for feature in customer.features.all %}
+                    <li class="list-group-item">{{ feature }}</li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No features assigned.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock content %}
