@@ -51,7 +51,7 @@ http:
         certResolver: letsencrypt
 
     web-media-router:
-      rule: 'Host(`integration00.definit.com`)) && PathPrefix(`/media/`)'
+      rule: 'Host(`integration00.definit.com`) && PathPrefix(`/media/`)'
       entryPoints:
         - web-secure
       middlewares:
