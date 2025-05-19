@@ -1,3 +1,6 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 
-# Create your views here.
+def hubspot_to_msgraph_webhook_listener(request):
+    print(f"{vars(request)}")
+    return HttpResponse(200)

@@ -1,10 +1,11 @@
 import uuid 
 from django.db import models
-from django.contrib.auth import get_user_model 
-from django.utils.text import slugify
+from django.contrib.auth import get_user_model
 
 from django.conf import settings 
 from cryptography.fernet import Fernet, InvalidToken
+
+from app.features.models import Feature
 
 User = get_user_model()
 
@@ -30,22 +31,7 @@ class Dashboard(models.Model):
 
 
 
-class Feature(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    slug = models.SlugField(max_length=255, unique=True, editable=False)
 
-    name = models.CharField(max_length=80)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"features: {self.slug}"
-    
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(str(self.uuid))
-        super().save(*args, **kwargs)
 
 
 
