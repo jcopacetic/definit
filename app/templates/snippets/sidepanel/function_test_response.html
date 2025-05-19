@@ -1,0 +1,19 @@
+<div class="site-sidepanel-wrapper">
+  <div class="site-sidepanel-header">
+    <div>
+      <h3>{{title}}</h3>
+    </div>
+  </div>
+  <div class="site-sidepanel-body">
+<pre id="jsonOutput" class="bg-light rounded border overflow-auto">
+{{json_data_to_display|safe}}
+</pre>
+  </div>
+    <div class="actions site-sidepanel-footer">
+    <a 
+      hx-delete="{% url 'dashboard:get-api-response' customer_slug=customer_slug %}" 
+      hx-swap="none"
+      hx-target="closest #site-sidepanel"
+      class="mt-3 me-3 btn btn-secondary" 
+      href="javascript:void(0)">close</a>
+</div>

@@ -200,7 +200,6 @@ class HubSpotClient:
         Args:
             url (str): The URL to make the request to
             method (str, optional): HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to "GET".
-            headers (dict, optional): HTTP headers. Defaults to None.
             params (dict, optional): URL parameters. Defaults to None.
             body (dict, optional): Request body for POST/PUT/PATCH requests. Defaults to None.
             
@@ -209,23 +208,26 @@ class HubSpotClient:
         """
         try:
             logger.info(f"Making {method} request to: {url}")
+        
+            headers = self.BUILD_HEADERS()
+            logger.info(f"Using Authorization: Bearer {self.ACCESS_TOKEN[:5]}...")
             
             if method.upper() == "GET":
-                response = requests.get(url, headers=self.BUILD_HEADERS(), params=params)
+                response = requests.get(url, headers=headers)
             elif method.upper() == "POST":
-                response = requests.post(url, headers=self.BUILD_HEADERS(), params=params, json=body)
+                response = requests.post(url, headers=headers, params=params, json=body)
             elif method.upper() == "PUT":
-                response = requests.put(url, headers=self.BUILD_HEADERS(), params=params, json=body)
+                response = requests.put(url, headers=headers, params=params, json=body)
             elif method.upper() == "PATCH":
-                response = requests.patch(url, headers=self.BUILD_HEADERS(), params=params, json=body)
+                response = requests.patch(url, headers=headers, params=params, json=body)
             elif method.upper() == "DELETE":
-                response = requests.delete(url, headers=self.BUILD_HEADERS(), params=params)
+                response = requests.delete(url, headers=headers, params=params)
             else:
                 logger.error(f"Unsupported HTTP method: {method}")
                 return None
                 
             response.raise_for_status()
-            
+
             if response.content:
                 return response.json()
             return {}
@@ -265,9 +267,6 @@ class HubSpotClient:
         return owner_data
     
 
-
-
-    
     def get_deal(self, deal_id, properties=None):
         """Get a specific deal by ID"""
         if properties is None:
