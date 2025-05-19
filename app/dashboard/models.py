@@ -1,5 +1,6 @@
 import uuid 
 from django.db import models
+from django.utils.text import slugify
 from django.contrib.auth import get_user_model
 
 from django.conf import settings 
