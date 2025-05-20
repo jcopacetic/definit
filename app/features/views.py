@@ -6,8 +6,13 @@ import hashlib
 import logging
 from django.conf import settings
 from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+
+from app.dashboard.models import Customer
+
+from app.hubspot.client import HubSpotClient
 
 logger = logging.getLogger(__name__)
 
@@ -18,37 +23,42 @@ def hubspot_to_msgraph_webhook_listener(request):
     Webhook listener for HubSpot events, particularly deal stage changes.
     Validates the HubSpot signature and processes the webhook payload.
     """
-    logger.info(request.body.decode('utf-8'))
     # First validate the request is legitimate
-    # validation_result = validate_hubspot_signature(request)
-    # if validation_result is not True:
-    #     return validation_result  # It's an HttpResponseForbidden
-
-    # # Process the webhook data
-    # try:
-    #     payload = json.loads(request.body.decode('utf-8'))
-
-    #     logger.info(request.body.decode('utf-8'))
+    validation_result = validate_hubspot_signature(request)
+    if validation_result is not True:
+        return validation_result  # It's an HttpResponseForbidden
+    
+    portal_id = request.GET.get("portalId")
+    customer = get_object_or_404(Customer, hubspot_portal_id=portal_id)
+    object_id = request.GET.get("objectId")
+    # Process the webhook data
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
         
-    #     # Log the received event for debugging
-    #     logger.info(f"Received HubSpot webhook: {payload.get('eventId', 'unknown')}")
+        # Log the received event for debugging
+        logger.info(f"Received HubSpot webhook: {payload.get('eventId', 'unknown')}")
         
-    #     # Check if this is a deal stage change event
-    #     if payload.get('subscriptionType') == 'deal.propertyChange':
-    #         return handle_deal_stage_change(payload)
-    #     else:
-    #         logger.info(f"Unhandled HubSpot event type: {payload.get('subscriptionType')}")
-    #         return HttpResponse("Unhandled event type", status=202)  # Accepted but not processed
+        # Check if this is a deal stage change event
+        if payload.get('subscriptionType') == 'deal.propertyChange':
+            hs_client = HubSpotClient(customer.hubspot_secret_app_key)
+            # 1. get new hubspot deal data
+            deal = hs_client.get_deal(object_id)
+            logger.info(deal)
+            # 2. lookup excel row by deal ID
+            # 3. update deal row
+        else:
+            logger.info(f"Unhandled HubSpot event type: {payload.get('subscriptionType')}")
+            return HttpResponse("Unhandled event type", status=202)  # Accepted but not processed
             
-    # except json.JSONDecodeError:
-    #     logger.error("Failed to parse webhook JSON payload")
-    #     return JsonResponse({"error": "Invalid JSON"}, status=400)
-    # except Exception as e:
-    #     logger.exception(f"Error processing webhook: {str(e)}")
-    #     return JsonResponse({"error": "Internal server error"}, status=500)
-    return HttpResponse(status=200)
+    except json.JSONDecodeError:
+        logger.error("Failed to parse webhook JSON payload")
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    except Exception as e:
+        logger.exception(f"Error processing webhook: {str(e)}")
+        return JsonResponse({"error": "Internal server error"}, status=500)
 
-def handle_deal_stage_change(payload):
+
+def handle_deal_update(payload):
     """
     Handle a deal stage change event from HubSpot.
     
