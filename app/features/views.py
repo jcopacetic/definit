@@ -23,10 +23,10 @@ def hubspot_to_msgraph_webhook_listener(request):
     Webhook listener for HubSpot events, particularly deal stage changes.
     Validates the HubSpot signature and processes the webhook payload.
     """
-    # First validate the request is legitimate
-    validation_result = validate_hubspot_signature(request)
-    if validation_result is not True:
-        return validation_result  # It's an HttpResponseForbidden
+    # # First validate the request is legitimate
+    # validation_result = validate_hubspot_signature(request)
+    # if validation_result is not True:
+    #     return validation_result  # It's an HttpResponseForbidden
     
     portal_id = request.GET.get("portalId")
     customer = get_object_or_404(Customer, hubspot_portal_id=portal_id)
