@@ -18,34 +18,35 @@ def hubspot_to_msgraph_webhook_listener(request):
     Webhook listener for HubSpot events, particularly deal stage changes.
     Validates the HubSpot signature and processes the webhook payload.
     """
+    logger.info(request.body.decode('utf-8'))
     # First validate the request is legitimate
-    validation_result = validate_hubspot_signature(request)
-    if validation_result is not True:
-        return validation_result  # It's an HttpResponseForbidden
+    # validation_result = validate_hubspot_signature(request)
+    # if validation_result is not True:
+    #     return validation_result  # It's an HttpResponseForbidden
 
-    # Process the webhook data
-    try:
-        payload = json.loads(request.body.decode('utf-8'))
+    # # Process the webhook data
+    # try:
+    #     payload = json.loads(request.body.decode('utf-8'))
 
-        logger.info(request.body.decode('utf-8'))
+    #     logger.info(request.body.decode('utf-8'))
         
-        # Log the received event for debugging
-        logger.info(f"Received HubSpot webhook: {payload.get('eventId', 'unknown')}")
+    #     # Log the received event for debugging
+    #     logger.info(f"Received HubSpot webhook: {payload.get('eventId', 'unknown')}")
         
-        # Check if this is a deal stage change event
-        if payload.get('subscriptionType') == 'deal.propertyChange':
-            return handle_deal_stage_change(payload)
-        else:
-            logger.info(f"Unhandled HubSpot event type: {payload.get('subscriptionType')}")
-            return HttpResponse("Unhandled event type", status=202)  # Accepted but not processed
+    #     # Check if this is a deal stage change event
+    #     if payload.get('subscriptionType') == 'deal.propertyChange':
+    #         return handle_deal_stage_change(payload)
+    #     else:
+    #         logger.info(f"Unhandled HubSpot event type: {payload.get('subscriptionType')}")
+    #         return HttpResponse("Unhandled event type", status=202)  # Accepted but not processed
             
-    except json.JSONDecodeError:
-        logger.error("Failed to parse webhook JSON payload")
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-    except Exception as e:
-        logger.exception(f"Error processing webhook: {str(e)}")
-        return JsonResponse({"error": "Internal server error"}, status=500)
-
+    # except json.JSONDecodeError:
+    #     logger.error("Failed to parse webhook JSON payload")
+    #     return JsonResponse({"error": "Invalid JSON"}, status=400)
+    # except Exception as e:
+    #     logger.exception(f"Error processing webhook: {str(e)}")
+    #     return JsonResponse({"error": "Internal server error"}, status=500)
+    return HttpResponse(status=200)
 
 def handle_deal_stage_change(payload):
     """
