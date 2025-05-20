@@ -30,13 +30,6 @@ class Dashboard(models.Model):
 
 
 
-
-
-
-
-
-
-
 class Customer(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     slug = models.SlugField(max_length=255, unique=True, editable=False)
