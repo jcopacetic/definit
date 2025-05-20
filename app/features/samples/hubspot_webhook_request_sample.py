@@ -1,3 +1,20 @@
+[
+    {
+        "eventId":3316341877,
+        "subscriptionId":3650616,
+        "portalId":46658116,
+        "appId":9907290,
+        "occurredAt":1747709515283,
+        "subscriptionType":"deal.propertyChange",
+        "attemptNumber":0,
+        "objectId":37446850175,
+        "propertyName":"dealstage",
+        "propertyValue":"appointmentscheduled",
+        "changeSource":"CRM_UI",
+        "sourceId":"userId:3633332"
+    }
+]
+
 {
     "scope": {
         "type": "http",
