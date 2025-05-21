@@ -212,95 +212,92 @@ def hubspot_to_msgraph_webhook_listener(request):
     """
     Webhook listener for HubSpot events, particularly deal stage changes.
     Processes the webhook payload and updates Excel via MS Graph when appropriate.
-    
+
     Returns:
         HttpResponse: Appropriate response based on processing result
     """
     request_id = f"req_{int(time.time() * 1000)}"
     logger.info(f"[{request_id}] Received HubSpot webhook request")
-    
-    
-    try:
-        logger.info(f"Request vars: {vars(request)}")
-    except TypeError:
-        logger.info(f"Request dir: {dir(request)}")
 
+    # --- Step 1: Parse JSON body ---
     try:
         body_bytes = request.body
         body_str = body_bytes.decode('utf-8')
-        body_json = json.loads(body_str)
-        logger.info("Request Body:\n%s", json.dumps(body_json, indent=2))
+        body = json.loads(body_str)
+        logger.info(f"[{request_id}] Request body:\n{json.dumps(body, indent=2)}")
     except Exception as e:
-        logger.warning("Failed to log request body: %s", e)
-    
-    
-    
-    try:
-        # Extract query parameters
-        try:
-            body = json.loads(request.body)
-            portal_id = body.get("portalId") or body.get("portal_id")
-            logger.info(f"Portal ID: {portal_id}")
-        except Exception as e:
-            logger.warning(f"Could not extract portal ID from body: {e}")
+        logger.warning(f"[{request_id}] Failed to parse request body: {e}")
+        return JsonResponse({"error": "Invalid JSON payload"}, status=400)
 
-        object_id = request.GET.get("objectId")
-        
+    # --- Step 2: Extract portalId and objectId ---
+    try:
+        if isinstance(body, list) and body:
+            data = body[0]
+        elif isinstance(body, dict):
+            data = body
+        else:
+            raise ValueError("Unexpected payload format")
+
+        portal_id = data.get("portalId") or data.get("portal_id")
+        object_id = data.get("objectId")
+
         if not portal_id:
             logger.warning(f"[{request_id}] Missing portalId in request")
-            return JsonResponse({"error": "Missing portalId parameter"}, status=400)
-            
+            return JsonResponse({"error": "Missing portalId"}, status=400)
+
         if not object_id:
             logger.warning(f"[{request_id}] Missing objectId in request")
-            return JsonResponse({"error": "Missing objectId parameter"}, status=400)
-        
-        # Get customer from portal ID
+            return JsonResponse({"error": "Missing objectId"}, status=400)
+
+        logger.info(f"[{request_id}] Extracted portalId: {portal_id}, objectId: {object_id}")
+
+    except Exception as e:
+        logger.error(f"[{request_id}] Failed to extract portalId or objectId: {e}")
+        return JsonResponse({"error": "Malformed request body"}, status=400)
+
+    # --- Step 3: Customer lookup ---
+    try:
+        customer = get_customer_from_portal_id(portal_id)
+        logger.info(f"[{request_id}] Found customer {customer.id} for portal {portal_id}")
+    except Exception as e:
+        logger.error(f"[{request_id}] Customer lookup failed: {e}")
+        return JsonResponse({"error": f"Customer lookup failed: {str(e)}"}, status=400)
+
+    # --- Step 4: Validate HubSpot signature ---
+    try:
+        validate_hubspot_signature(request, customer)
+        logger.debug(f"[{request_id}] HubSpot signature validation successful")
+    except WebhookValidationError as e:
+        logger.warning(f"[{request_id}] Webhook signature validation failed: {e.message}")
+        return HttpResponseForbidden(e.message)
+
+    # --- Step 5: Parse payload ---
+    try:
+        payload = parse_webhook_payload(request)
+        event_id = payload.get("eventId", "unknown")
+        event_type = payload.get("subscriptionType", "unknown")
+        logger.info(f"[{request_id}] Processing HubSpot event {event_id} of type {event_type}")
+    except ValueError as e:
+        logger.error(f"[{request_id}] Payload parsing failed: {e}")
+        return JsonResponse({"error": str(e)}, status=400)
+
+    # --- Step 6: Handle specific event types ---
+    if event_type == "deal.propertyChange":
         try:
-            customer = get_customer_from_portal_id(portal_id)
-            logger.info(f"[{request_id}] Found customer: {customer.id} for portal: {portal_id}")
-        except Exception as e:
-            logger.error(f"[{request_id}] Failed to get customer: {str(e)}")
-            return JsonResponse({"error": f"Customer lookup failed: {str(e)}"}, status=400)
-        
-        # Validate HubSpot signature
-        try:
-            validate_hubspot_signature(request, customer)
-            logger.debug(f"[{request_id}] HubSpot signature validation successful")
-        except WebhookValidationError as e:
-            logger.warning(f"[{request_id}] Webhook validation failed: {e.message}")
-            return HttpResponseForbidden(e.message)
-        
-        # Parse the webhook payload
-        try:
-            payload = parse_webhook_payload(request)
-        except ValueError as e:
-            return JsonResponse({"error": str(e)}, status=400)
-        
-        # Log the received event
-        event_id = payload.get('eventId', 'unknown')
-        event_type = payload.get('subscriptionType', 'unknown')
-        logger.info(f"[{request_id}] Processing HubSpot event: {event_id}, type: {event_type}")
-        
-        # Handle different event types
-        if event_type == 'deal.propertyChange':
-            # Process deal stage change
             success, message = process_deal_stage_change(customer, object_id, payload)
-            
             if success:
-                logger.info(f"[{request_id}] Successfully processed deal stage change: {message}")
+                logger.info(f"[{request_id}] Deal stage processed successfully: {message}")
                 return JsonResponse({"status": "success", "message": message})
             else:
-                logger.error(f"[{request_id}] Failed to process deal stage change: {message}")
+                logger.error(f"[{request_id}] Deal stage processing failed: {message}")
                 return JsonResponse({"status": "error", "message": message}, status=500)
-                
-        else:
-            # Unrecognized event type - acknowledge receipt but take no action
-            logger.info(f"[{request_id}] Unhandled HubSpot event type: {event_type}")
-            return HttpResponse("Acknowledged unhandled event type", status=202)
-            
-    except Exception as e:
-        logger.exception(f"[{request_id}] Unhandled exception in webhook processing: {str(e)}")
-        return JsonResponse(
-            {"error": "Internal server error", "message": str(e)},
-            status=500
-        )
+        except Exception as e:
+            logger.exception(f"[{request_id}] Error during deal stage processing: {e}")
+            return JsonResponse({"error": "Processing failure", "message": str(e)}, status=500)
+    else:
+        logger.info(f"[{request_id}] Unhandled event type: {event_type}")
+        return HttpResponse("Acknowledged unhandled event type", status=202)
+
+    # --- Catch-All Fallback ---
+    # (This may be unreachable but left for safety in future edits)
+    return JsonResponse({"error": "Unexpected error"}, status=500)
