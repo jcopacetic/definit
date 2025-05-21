@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 
 from app.dashboard.models import Dashboard
 from app.dashboard.models import Customer 
+from app.features.models import CustomerFeature, Feature
 
 from app.ms_graph.client import MSGraphClient
 from app.hubspot.client import HubSpotClient
@@ -28,7 +29,7 @@ def customer_view(request, customer_slug):
     return render(request, "dashboard/customer.html", {"customer": customer})
 
 @login_required 
-def sidepanel_handler(request, panel_html, extra_html=""):
+def sidepanel_handler(request, panel_html, extra_html="", open=False):
     if request.method in ["GET", "PUT"]:
         extra_class = "active"
         template = render_to_string(
@@ -40,7 +41,7 @@ def sidepanel_handler(request, panel_html, extra_html=""):
         )
 
     if request.method == "POST":
-        extra_class = ""
+        extra_class = "" if not open else "active"
         template = render_to_string(
             "snippets/sidepanel.html",
             {
@@ -49,7 +50,7 @@ def sidepanel_handler(request, panel_html, extra_html=""):
             }
         )
     if request.method == "DELETE":
-        extra_class = ""
+        extra_class = "" if not open else "active"
         template = render_to_string(
             "snippets/sidepanel.html",
             {
@@ -60,6 +61,260 @@ def sidepanel_handler(request, panel_html, extra_html=""):
     html_response = template + extra_html
     
     return HttpResponse(html_response, status=200)
+
+
+
+
+ALLOWED_STEPS = {0, 1, 2, 3, 4, 5}
+ALLOWED_FEATURES = {"feature_1"}
+
+@login_required
+def customer_feature_handler(request, customer_slug):
+    step = int(request.headers.get("x-step", "100"))
+    logger.info(f"step: {step}")
+    feature = request.headers.get("x-feature", "")
+    logger.info(f"feature: {feature}")
+
+    if step not in ALLOWED_STEPS:
+        logger.error("Invalid step value received: %s", step)
+        return HttpResponse(status=403)
+
+    if feature not in ALLOWED_FEATURES:
+        logger.error("Invalid feature value received: %s", feature)
+        return HttpResponse(status=403)
+
+    customer = get_object_or_404(Customer, slug=customer_slug)
+    ms_client = MSGraphClient(customer)
+
+    panel_action = ""
+    extra_html = ""
+    open=False
+    sidepanel_payload = {"customer_slug": customer_slug}
+
+    if request.method == "GET":
+        if feature == "feature_1" and step == 1:
+            logger.info("Fetching workbooks for feature_1, step 1")
+            try:
+                workbooks = ms_client.get_workbooks()
+                session_key = f"{customer_slug}_feature_1_workbooks"
+
+                workbooks_field = [
+                    {"name": wb.get("name", ""), "id": wb.get("id", ""), "position": wb.get("position", "")}
+                    for wb in workbooks
+                ]
+                sidepanel_payload["workbooks"] = workbooks_field
+                
+                request.session[session_key] = sidepanel_payload["workbooks"]
+                request.session.modified = True
+
+            except Exception as e:
+                logger.exception("Failed to retrieve workbooks: %s", e)
+                return HttpResponse(status=500)
+
+            panel_action = render_to_string(
+                "snippets/sidepanel/add_feature_to_customer.html",
+                sidepanel_payload,
+            )
+
+    elif request.method == "POST":
+        if feature == "feature_1" and step == 1:
+            try:
+                workbook_id = request.POST.get("workbook-select", "")
+                logger.info(f"Received workbook_id from POST: {workbook_id}")
+
+                selected_wb_key = f"{customer_slug}_feature_1_workbook_id"
+                if workbook_id:
+                    request.session[selected_wb_key] = workbook_id
+                    request.session.modified = True
+                    logger.info(f"Stored workbook_id in session under key: {selected_wb_key}")
+
+                workbooks_key = f"{customer_slug}_feature_1_workbooks"
+                workbook_options = request.session.get(workbooks_key)
+                if not workbook_options:
+                    logger.warning(f"No workbook list in session under key: {workbooks_key}")
+                    return HttpResponse(status=400)
+
+                logger.info(f"Session workbook_options: {workbook_options}")
+
+                # Lookup the workbook name by ID
+                selected_wb = next((wb for wb in workbook_options if wb["id"] == workbook_id), None)
+                if not selected_wb:
+                    logger.error(f"No matching workbook found for ID: {workbook_id}")
+                    return HttpResponse(status=404)
+
+                selected_wb_name = selected_wb.get("name", "Unnamed Workbook")
+                logger.info(f"Selected workbook name: {selected_wb_name}")
+
+                selected_wb_name_key = f"{customer_slug}_feature_1_workbook_name"
+                if selected_wb_name:
+                    request.session[selected_wb_name_key] = selected_wb_name
+                    request.session.modified = True
+                    logger.info(f"Stored workbook_name in session under key: {selected_wb_name_key}")
+
+                worksheets = ms_client.get_worksheets(workbook_id)
+                session_ws_key = f"{customer_slug}_feature_1_worksheets"
+
+                worksheets_field = [
+                    {"name": ws.get("name", ""), "id": ws.get("id", ""), "position": ws.get("position", "")}
+                    for ws in worksheets
+                ]
+                sidepanel_payload["worksheets"] = worksheets_field
+                sidepanel_payload["raw"] = worksheets
+
+                request.session[session_ws_key] = sidepanel_payload["worksheets"]
+                request.session.modified = True
+
+                panel_action = render_to_string(
+                "snippets/sidepanel/add_feature_to_customer_step_2.html",
+                    sidepanel_payload,
+                )
+                open = True
+
+            except json.JSONDecodeError:
+                logger.error("Invalid JSON in request body")
+                return HttpResponse(status=400)
+            
+        
+        if feature == "feature_1" and step == 2:
+            try: 
+                worksheet_id = request.POST.get("worksheet-select")
+                logger.info(f"Received worksheet_id from POST: {worksheet_id}")
+
+                selected_ws_key = f"{customer_slug}_feature_1_worksheet_id"
+                if worksheet_id:
+                    request.session[selected_ws_key] = worksheet_id
+                    request.session.modified = True
+                    logger.info(f"Stored worksheet_id in session under key: {selected_ws_key}")
+
+                worksheets_key = f"{customer_slug}_feature_1_worksheets"
+                worksheet_options = request.session.get(worksheets_key)
+                if not worksheet_options:
+                    logger.warning(f"No worksheet list in session under key: {worksheets_key}")
+                    return HttpResponse(status=400)
+                
+                logger.info(f"session worksheet_options: {worksheet_options}")
+
+                selected_ws = next((ws for ws in worksheet_options if ws["id"] == worksheet_id), None)
+                if not selected_ws: 
+                    logger.error(f"No matching worksheet found for ID: {worksheet_id}")
+                    return HttpResponse(status=404)
+                
+                selected_ws_name = selected_ws.get("name", "unnamed worksheet")
+                logger.info(f"Selected worksheet name: {selected_ws_name}")
+
+                selected_ws_name_key = f"{customer_slug}_feature_1_worksheet_name"
+                if selected_ws_name:
+                    request.session[selected_ws_name_key] = selected_ws_name 
+                    request.session.modified = True 
+                    logger.info(f"Stored worksheet_name in session under key: {selected_ws_name_key}")
+
+                selected_ws_position = selected_ws.get("position", "")
+                logger.info(f"Selected worksheet position: {selected_ws_position}")
+
+                selected_ws_position_key = f"{customer_slug}_feature_1_worksheet_position"
+                if selected_ws_position_key: 
+                    request.session[selected_ws_position_key] = selected_ws_position
+                    request.session.modified = True 
+                    logger.info(f"Stored worksheet_position in session under key: {selected_ws_position_key}")
+
+                selected_wb_key = f"{customer_slug}_feature_1_workbook_id"
+                workbook_id = request.session.get(selected_wb_key)
+
+                worksheet_headers = ms_client.get_worksheet_headers(workbook_id, worksheet_id)
+
+                worksheet_headers_key = f"{customer_slug}_feature_1_worksheet_headers"
+                if worksheet_headers: 
+                    request.session[worksheet_headers_key] = worksheet_headers
+                    request.session.modified = True 
+                    logger.info(f"Stored worksheet_position in session under key: {worksheet_headers_key}")
+
+                sidepanel_payload["headers"] = worksheet_headers 
+
+                worksheet_dimensions = ms_client.get_worksheet_dimensions(workbook_id, worksheet_id)
+
+                worksheet_dimensions_key = f"{customer_slug}_feature_1_worksheet_dimensions"
+                if worksheet_dimensions: 
+                    request.session[worksheet_dimensions_key] = worksheet_dimensions
+                    request.session.modified = True 
+                    logger.info(f"Stored worksheet_position in session under key: {worksheet_dimensions_key}")
+
+                sidepanel_payload["dimensions"] = worksheet_dimensions
+
+                worksheet_last_row = ms_client.get_last_row(workbook_id, worksheet_id)
+
+                worksheet_last_row_key = f"{customer_slug}_feature_1_worksheet_last_row"
+                if worksheet_last_row: 
+                    request.session[worksheet_last_row_key] = worksheet_last_row
+                    request.session.modified = True 
+                    logger.info(f"Stored worksheet_position in session under key: {worksheet_last_row_key}")
+
+                sidepanel_payload["last_row"] = worksheet_last_row 
+                
+                
+                panel_action = render_to_string(
+                "snippets/sidepanel/add_feature_to_customer_step_3.html",
+                    sidepanel_payload,
+                )
+                open = True
+
+            except json.JSONDecodeError: 
+                logger.error("Invalid JSON in request body")
+                return HttpResponse(status=400)
+
+
+        if feature == "feature_1" and step == 3:
+            try: 
+                selected_wokbook_id_key = f"{customer_slug}_feature_1_workbook_id"
+                workbook_id = request.session.get(selected_wokbook_id_key)
+
+                selected_workbook_name_key = f"{customer_slug}_feature_1_workbook_name"
+                workbook_name = request.session.get(selected_workbook_name_key)
+
+                selected_worksheet_id_key = f"{customer_slug}_feature_1_worksheet_id"
+                worksheet_id = request.session.get(selected_worksheet_id_key)
+
+                selected_worksheet_name_key = f"{customer_slug}_feature_1_worksheet_name"
+                worksheet_name = request.session.get(selected_worksheet_name_key)
+
+                selected_worksheet_position_key = f"{customer_slug}_feature_1_worksheet_position"
+                worksheet_position = request.session.get(selected_worksheet_position_key)
+
+                worksheet_headers_key = f"{customer_slug}_feature_1_worksheet_headers"
+                worksheet_headers = request.session.get(worksheet_headers_key)
+
+                worksheet_dimensions_key = f"{customer_slug}_feature_1_worksheet_dimensions"
+                worksheet_dimensions = request.session.get(worksheet_dimensions_key)
+
+                worksheet_last_row_key = f"{customer_slug}_feature_1_worksheet_last_row"
+                worksheet_last_row = request.session.get(worksheet_last_row_key)
+
+                CustomerFeature.objects.create(
+                    customer = customer,
+                    feature = Feature.objects.first(),
+                    workbook_id = workbook_id, 
+                    workbook_name = workbook_name,
+                    worksheet_id = worksheet_id, 
+                    worksheet_name = worksheet_name, 
+                    worksheet_position = worksheet_position, 
+                    worksheet_headers = worksheet_headers, 
+                    worksheet_num_rows = worksheet_dimensions[0],
+                    worksheet_num_columns = worksheet_dimensions[1],
+                    worksheet_last_row = worksheet_last_row,
+                    active = True, 
+                )
+
+            except json.JSONDecodeError: 
+                logger.error("Invalid JSON in request body")
+                return HttpResponse(status=400)
+    elif request.method == "DELETE":
+        logger.info("DELETE request received for customer %s, feature %s", customer_slug, feature)
+        # Future DELETE logic here
+
+    else:
+        return HttpResponse(status=405)
+
+    return sidepanel_handler(request, panel_action, extra_html, open)
+
 
 
 
@@ -526,3 +781,5 @@ def get_api_response(request, customer_slug):
     if request.method in ["GET", "DELETE"]:
         return sidepanel_handler(request, panel_action, extra_html)
     return HttpResponse(status=403)
+
+

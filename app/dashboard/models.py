@@ -6,8 +6,6 @@ from django.contrib.auth import get_user_model
 from django.conf import settings 
 from cryptography.fernet import Fernet, InvalidToken
 
-from app.features.models import Feature
-
 User = get_user_model()
 
 
@@ -33,8 +31,6 @@ class Dashboard(models.Model):
 class Customer(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     slug = models.SlugField(max_length=255, unique=True, editable=False)
-
-    features = models.ManyToManyField(Feature, blank=True, related_name="customers")
 
     dashboard = models.ForeignKey(Dashboard, on_delete=models.CASCADE, related_name="customers")
     name = models.CharField(max_length=80)
