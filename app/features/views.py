@@ -61,11 +61,13 @@ def validate_hubspot_signature(request, customer: Customer) -> None:
         WebhookValidationError: If validation fails at any point.
     """
     signature_header = request.headers.get("X-HubSpot-Signature-v3")
+    logger.info(f"signature header: {signature_header}")
     if not signature_header:
         logger.warning("Missing HubSpot signature header")
         raise WebhookValidationError("Missing HubSpot signature header")
 
     timestamp = request.headers.get("X-HubSpot-Request-Timestamp")
+    logger.info(f"timestamp: {timestamp}")
     if not timestamp:
         logger.warning("Missing HubSpot timestamp header")
         raise WebhookValidationError("Missing HubSpot timestamp header")
@@ -82,7 +84,8 @@ def validate_hubspot_signature(request, customer: Customer) -> None:
         logger.warning(f"Request expired. Current time: {current_time}, request time: {request_time}")
         raise WebhookValidationError("Request expired - timestamp too old")
 
-    secret = customer.hubspot_secret_app_key
+    secret = customer.hubspot_client_secret
+    logger.info(f"secret: {secret}")
     if not secret:
         logger.critical(f"Customer {customer.id} missing HubSpot secret key")
         raise WebhookValidationError("HubSpot secret not configured for customer", 500)
