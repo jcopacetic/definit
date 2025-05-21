@@ -218,7 +218,10 @@ def hubspot_to_msgraph_webhook_listener(request):
     """
     request_id = f"req_{int(time.time() * 1000)}"
     logger.info(f"[{request_id}] Received HubSpot webhook request")
-    logger.info(f"{request}")
+    try:
+        logger.info(f"Request vars: {vars(request)}")
+    except TypeError:
+        logger.info(f"Request dir: {dir(request)}")
     
     try:
         # Extract query parameters
