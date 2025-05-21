@@ -50,18 +50,6 @@ def hubspot_signature_required(f):
 
 
 def validate_hubspot_signature(request, customer: Customer) -> None:
-    """
-    Validate that the request is actually coming from HubSpot by checking
-    the signature against the customer's HubSpot app key.
-    
-    Args:
-        request: The HTTP request
-        customer: The customer object with the HubSpot secret app key
-    
-    Raises:
-        WebhookValidationError: If the validation fails
-    """
-    # Check for required headers
     signature_header = request.headers.get("X-HubSpot-Signature-v3")
     if not signature_header:
         raise WebhookValidationError("Missing HubSpot signature header")
@@ -70,56 +58,42 @@ def validate_hubspot_signature(request, customer: Customer) -> None:
     if not timestamp:
         raise WebhookValidationError("Missing HubSpot timestamp header")
 
-    # Validate timestamp
     try:
         current_time = int(time.time() * 1000)
         request_time = int(timestamp)
     except ValueError:
         raise WebhookValidationError("Invalid timestamp format", 400)
 
-    # Check if the request is too old
-    max_allowed_age = 300_000  # 5 minutes in milliseconds
+    max_allowed_age = 300_000  # 5 minutes in ms
     if current_time - request_time > max_allowed_age:
         raise WebhookValidationError("Request expired - timestamp too old")
 
-    # Get the secret from the customer
     secret = customer.hubspot_secret_app_key
     if not secret:
         logger.critical(f"Customer {customer.id} has no HubSpot secret app key")
         raise WebhookValidationError("HubSpot secret not configured for customer", 500)
 
-    # Build the signature base string
-    method = request.method.upper()
-    hostname = request.get_host()
-    uri = request.build_absolute_uri()
-    
-    # Parse the body
     try:
-        body = request.body.decode("utf-8") if request.body else ""
-        if body and request.content_type == "application/json":
-            # Normalize JSON spacing
-            body = json.dumps(json.loads(body))
-    except UnicodeDecodeError:
-        logger.exception("Failed to decode request body")
-        raise WebhookValidationError("Invalid request body encoding", 400)
-    except json.JSONDecodeError:
-        logger.exception("Invalid JSON in request body")
-        raise WebhookValidationError("Invalid JSON in request body", 400)
+        method = request.method.upper()
+        uri = request.build_absolute_uri()
+        body = request.body or b""
 
-    # Calculate expected signature
-    signature_base = f"{method}{uri}{body}{timestamp}"
-    try:
+        signature_base = method.encode("utf-8") + \
+                         uri.encode("utf-8") + \
+                         body + \
+                         timestamp.encode("utf-8")
+
         calculated = hmac.new(
             key=secret.encode("utf-8"),
-            msg=signature_base.encode("utf-8"),
+            msg=signature_base,
             digestmod=hashlib.sha256
         ).digest()
+
         calculated_b64 = base64.b64encode(calculated).decode("utf-8")
     except Exception as e:
         logger.exception(f"Error calculating signature: {str(e)}")
         raise WebhookValidationError("Error calculating signature", 500)
 
-    # Compare signatures
     if not hmac.compare_digest(calculated_b64, signature_header):
         raise WebhookValidationError("Invalid HubSpot signature")
 
