@@ -84,6 +84,8 @@ def create_customer(request):
         # Encrypted fields are assigned via their property
         if data.get("hubspot_secret_app_key"):
             customer.hubspot_secret_app_key = data["hubspot_secret_app_key"]
+        if data.get("hubspot_client_secret"):
+            customer.hubspot_secret_app_key = data["hubspot_client_secret"]
         if data.get("msgraph_site_id"):
             customer.msgraph_site_id = data["msgraph_site_id"]
         if data.get("msgraph_drive_id"):
@@ -135,6 +137,8 @@ def get_customer(request, customer_slug):
         # Encrypted properties
         if data.get("hubspot_secret_app_key"):
             customer.hubspot_secret_app_key = data["hubspot_secret_app_key"]
+        if data.get("hubspot_client_secret"):
+            customer.hubspot_secret_app_key = data["hubspot_client_secret"]
         if data.get("msgraph_site_id"):
             customer.msgraph_site_id = data["msgraph_site_id"]
         if data.get("msgraph_drive_id"):
