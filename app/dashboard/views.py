@@ -85,7 +85,7 @@ def create_customer(request):
         if data.get("hubspot_secret_app_key"):
             customer.hubspot_secret_app_key = data["hubspot_secret_app_key"]
         if data.get("hubspot_client_secret"):
-            customer.hubspot_secret_app_key = data["hubspot_client_secret"]
+            customer.hubspot_client_secret = data["hubspot_client_secret"]
         if data.get("msgraph_site_id"):
             customer.msgraph_site_id = data["msgraph_site_id"]
         if data.get("msgraph_drive_id"):
@@ -138,7 +138,7 @@ def get_customer(request, customer_slug):
         if data.get("hubspot_secret_app_key"):
             customer.hubspot_secret_app_key = data["hubspot_secret_app_key"]
         if data.get("hubspot_client_secret"):
-            customer.hubspot_secret_app_key = data["hubspot_client_secret"]
+            customer.hubspot_client_secret = data["hubspot_client_secret"]
         if data.get("msgraph_site_id"):
             customer.msgraph_site_id = data["msgraph_site_id"]
         if data.get("msgraph_drive_id"):

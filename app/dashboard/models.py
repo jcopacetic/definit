@@ -221,6 +221,7 @@ class Customer(models.Model):
         """
         return {
             "hubspot_secret_app_key": self.has_hubspot_secret(),
+            "hubspot_client_secret": self.has_hubspot_client_secret(),
             "msgraph_site_id": self.has_msgraph_site_id(),
             "msgraph_drive_id": self.has_msgraph_drive_id(),
             "msgraph_client_id": self.has_msgraph_client_id(),
