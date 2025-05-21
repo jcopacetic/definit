@@ -42,6 +42,7 @@ class Customer(models.Model):
 
     hubspot_portal_id = models.CharField(max_length=30, blank=True)
     _hubspot_secret_app_key = models.CharField(max_length=500, blank=True, db_column='hubspot_secret_app_key')
+    _hubspot_client_secret = models.CharField(max_length=500, blank=True, db_column='hubspot_client_secret')
 
     # Encrypted Microsoft Graph fields
     _msgraph_site_id = models.CharField(max_length=500, blank=True, db_column='msgraph_site_id')
@@ -94,6 +95,15 @@ class Customer(models.Model):
     @hubspot_secret_app_key.setter
     def hubspot_secret_app_key(self, value):
         self._hubspot_secret_app_key = self._encrypt_value(value)
+
+    # HubSpot client secret getter and setter
+    @property
+    def hubspot_client_secret(self):
+        return self._decrypt_value(self._hubspot_client_secret)
+    
+    @hubspot_client_secret.setter
+    def hubspot_client_secret(self, value):
+        self._hubspot_client_secret = self._encrypt_value(value)
     
     # Microsoft Graph site ID getter and setter
     @property
@@ -165,6 +175,12 @@ class Customer(models.Model):
             return bool(self.hubspot_secret_app_key and self.hubspot_secret_app_key != "[decryption-error]")
         except Exception:
             return False
+        
+    def has_hubspot_client_secret(self):
+        try:
+            return bool(self.hubspot_client_secret and self.hubspot_client_secret != "[decryption-error]")
+        except Exception:
+            return False
 
     def has_msgraph_site_id(self):
         return bool(self.msgraph_site_id and self.msgraph_site_id != "[decryption-error]")
@@ -191,6 +207,7 @@ class Customer(models.Model):
         """
         return all([
             self.has_hubspot_secret(),
+            self.has_hubspot_client_secret(),
             self.has_msgraph_site_id(),
             self.has_msgraph_drive_id(),
             self.has_msgraph_client_id(),
