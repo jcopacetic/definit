@@ -218,10 +218,22 @@ def hubspot_to_msgraph_webhook_listener(request):
     """
     request_id = f"req_{int(time.time() * 1000)}"
     logger.info(f"[{request_id}] Received HubSpot webhook request")
+    
+    
     try:
         logger.info(f"Request vars: {vars(request)}")
     except TypeError:
         logger.info(f"Request dir: {dir(request)}")
+
+    try:
+        body_bytes = request.body
+        body_str = body_bytes.decode('utf-8')
+        body_json = json.loads(body_str)
+        logger.info("Request Body:\n%s", json.dumps(body_json, indent=2))
+    except Exception as e:
+        logger.warning("Failed to log request body: %s", e)
+    
+    
     
     try:
         # Extract query parameters
