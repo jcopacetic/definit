@@ -36,697 +36,705 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row mb-4">
         <div class="col">
             <h2>Features</h2>
-            <ul class="list-group">
+            <ul class="features-list">
                 {% for feature in customer.features.all %}
-                    <li class="list-group-item">{{ feature }}</li>
+                    <li>{{ feature }}</li>
                 {% empty %}
-                    <li class="list-group-item text-muted">No features assigned.</li>
+                    <li class="text-muted">No features assigned.</li>
                 {% endfor %}
+                <li
+                    hx-get="{% url 'dashboard:customer-feature-hander' customer_slug=customer.slug %}" 
+                    hx-headers='{"x-step": 1, "x-feature": "feature_1"}'
+                    hx-swap="none"
+                class="add-feature"><span>Add feature</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/></svg></li>
             </ul>
         </div>
     </div>
 
-      <!-- Microsoft Graph Functions Section -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <h3 class="h4 mb-0">Microsoft Graph Functions</h3>
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-12 col-sm-6 col-md-4">
-                <button
-                    hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                    hx-swap="none"
-                    hx-headers='{"X-Function": "get-sites"}'
-                class="btn btn-outline-primary w-100">Get Sites</button>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-4">Function Tests</h2>
+        <!-- Microsoft Graph Functions Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h3 class="h4 mb-0">Microsoft Graph Functions</h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6 col-md-4">
+                    <button
                         hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
                         hx-swap="none"
-                        hx-headers='{"X-Function": "get-site-by-name"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="site_name" placeholder="Site name">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Site By Name</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-site-by-path"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="site_path" placeholder="Site path">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Site By Path</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                <button
-                    hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                    hx-swap="none"
-                    hx-headers='{"X-Function": "get-drives"}'
-                class="btn btn-outline-primary w-100">Get Drives</button>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-drive-by-name"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="drive_name" placeholder="Drive name">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Drive by Name</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                <button
-                    hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                    hx-swap="none"
-                    hx-headers='{"X-Function": "get-drive-items"}'
-                class="btn btn-outline-primary w-100">Get Drive Items</button>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-folder-items"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="folder_path" placeholder="Folder path">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Folder Items</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "search-items"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="search_term" placeholder="Search Term">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Search for Items</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-item"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="item_path" placeholder="Item path">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Item by Path</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-item-by-id"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="item_id" placeholder="Item ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Item by ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-workbooks"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="folder_path" placeholder="Folder path (blank)">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Workbooks</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-workbooks"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_name" placeholder="Workbook name">
-                            <input type="text" class="form-control" name="folder_path" placeholder="Folder path (blank)">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Workbook by Name</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-worksheets"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Worksheets</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-worksheet-by-name"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_name" placeholder="Worksheet name">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Worksheet by Name</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-worksheet-by-index"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_index" placeholder="Worksheet index">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Worksheet by Index</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-range"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="text" class="form-control" name="range_address" placeholder="Range address">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Range</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-used-range"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Used Range</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-worksheet-headers"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="number" class="form-control" name="header_row" placeholder="Header row">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Worksheet Headers</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-column-index-by-header"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="number" class="form-control" name="header_row" placeholder="Header row">
-                            <input type="text" class="form-control" name="header_name" placeholder="header name">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Column Index By Header</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-column-letter-by-header"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="number" class="form-control" name="header_row" placeholder="Header row">
-                            <input type="text" class="form-control" name="header_name" placeholder="header name">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Column Letter By Header</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "find-row-by-value"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="text" class="form-control" name="column" placeholder="Column (letter or name)">
-                            <input type="text" class="form-control" name="search_term" placeholder="Search term">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="case_sensitive" name="case_sensitive">
-                                <label class="form-check-label" for="case_sensitive">Case Sensitive?</label>
+                        hx-headers='{"X-Function": "get-sites"}'
+                    class="btn btn-outline-primary w-100">Get Sites</button>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-site-by-name"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="site_name" placeholder="Site name">
                             </div>
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Find Row By Value</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
+                            <button class="btn btn-outline-primary w-100">Get Site By Name</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-site-by-path"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="site_path" placeholder="Site path">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Site By Path</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                    <button
                         hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
                         hx-swap="none"
-                        hx-headers='{"X-Function": "update-cell"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="text" class="form-control" name="cell_address" placeholder="Cell address">
-                            <input type="text" class="form-control" name="cell_value" placeholder="Cell value">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Update Cell</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
+                        hx-headers='{"X-Function": "get-drives"}'
+                    class="btn btn-outline-primary w-100">Get Drives</button>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-drive-by-name"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="drive_name" placeholder="Drive name">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Drive by Name</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                    <button
                         hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
                         hx-swap="none"
-                        hx-headers='{"X-Function": "update-range"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="text" class="form-control" name="range_address" placeholder="Range address">
-                            <input type="text" class="form-control" name="range_value_list" placeholder="Range value list">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Update Range</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "append-row"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="text" class="form-control" name="row_values_list" placeholder="Row values list">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Append Row</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-last-row"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Last Row</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-worksheet-dimensions"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Worksheet Dimensions</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "find-row-by-id"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
-                            <input type="text" class="form-control" name="id_column" placeholder="Column (letter or name)">
-                            <input type="text" class="form-control" name="id_value" placeholder="Search value">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Find Row By HubSpot Deal ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "create-worksheet"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
-                            <input type="text" class="form-control" name="worksheet_name" placeholder="Worksheet Name">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Create Worksheet</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-file"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="file_name" placeholder="File name">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get File</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-file"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="file_name" placeholder="File name">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get File Content</button>
-                    </form>
-                </div>
+                        hx-headers='{"X-Function": "get-drive-items"}'
+                    class="btn btn-outline-primary w-100">Get Drive Items</button>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-folder-items"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="folder_path" placeholder="Folder path">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Folder Items</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "search-items"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="search_term" placeholder="Search Term">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Search for Items</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-item"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="item_path" placeholder="Item path">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Item by Path</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-item-by-id"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="item_id" placeholder="Item ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Item by ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-workbooks"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="folder_path" placeholder="Folder path (blank)">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Workbooks</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-workbooks"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_name" placeholder="Workbook name">
+                                <input type="text" class="form-control" name="folder_path" placeholder="Folder path (blank)">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Workbook by Name</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-worksheets"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Worksheets</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-worksheet-by-name"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_name" placeholder="Worksheet name">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Worksheet by Name</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-worksheet-by-index"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_index" placeholder="Worksheet index">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Worksheet by Index</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-range"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="text" class="form-control" name="range_address" placeholder="Range address">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Range</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-used-range"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Used Range</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-worksheet-headers"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="number" class="form-control" name="header_row" placeholder="Header row">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Worksheet Headers</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-column-index-by-header"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="number" class="form-control" name="header_row" placeholder="Header row">
+                                <input type="text" class="form-control" name="header_name" placeholder="header name">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Column Index By Header</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-column-letter-by-header"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="number" class="form-control" name="header_row" placeholder="Header row">
+                                <input type="text" class="form-control" name="header_name" placeholder="header name">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Column Letter By Header</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "find-row-by-value"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="text" class="form-control" name="column" placeholder="Column (letter or name)">
+                                <input type="text" class="form-control" name="search_term" placeholder="Search term">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="case_sensitive" name="case_sensitive">
+                                    <label class="form-check-label" for="case_sensitive">Case Sensitive?</label>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Find Row By Value</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "update-cell"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="text" class="form-control" name="cell_address" placeholder="Cell address">
+                                <input type="text" class="form-control" name="cell_value" placeholder="Cell value">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Update Cell</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "update-range"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="text" class="form-control" name="range_address" placeholder="Range address">
+                                <input type="text" class="form-control" name="range_value_list" placeholder="Range value list">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Update Range</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "append-row"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="text" class="form-control" name="row_values_list" placeholder="Row values list">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Append Row</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-last-row"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Last Row</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-worksheet-dimensions"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Worksheet Dimensions</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "find-row-by-id"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_id" placeholder="Worksheet ID">
+                                <input type="text" class="form-control" name="id_column" placeholder="Column (letter or name)">
+                                <input type="text" class="form-control" name="id_value" placeholder="Search value">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Find Row By HubSpot Deal ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "create-worksheet"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="workbook_item_id" placeholder="Workbook item ID">
+                                <input type="text" class="form-control" name="worksheet_name" placeholder="Worksheet Name">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Create Worksheet</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-file"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="file_name" placeholder="File name">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get File</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-file"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="file_name" placeholder="File name">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get File Content</button>
+                        </form>
+                    </div>
 
 
-                <div class="col-12 col-sm-6 col-md-4">
-                    <button class="btn btn-outline-primary w-100">Sync HubSpot to Spreadsheet</button>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <button class="btn btn-outline-primary w-100">Sync HubSpot to Spreadsheet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- HubSpot Functions Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h3 class="h4 mb-0">HubSpot Functions</h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Owner Functions -->
+                    <div class="col-12 col-md-4">
+                    <button
+                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                        hx-swap="none"
+                        hx-headers='{"X-Function": "get-all-owners"}'
+                        class="btn btn-outline-primary w-100">Get All Owners</button>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <form
+                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                        hx-swap="none"
+                        hx-headers='{"X-Function": "get-owner"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="owner_id" placeholder="Owner ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Owner by ID</button>
+                        </form>
+                    </div>
+
+                    <!-- Deal Functions -->
+                    <div class="col-12">
+                    <h4 class="h5 mt-3 mb-2">Deal Operations</h4>
+                    </div>
+                    
+                    <div class="col-12 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-deal"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-2" name="deal_id" placeholder="Deal ID">
+                                <input type="text" class="form-control" name="deal_properties" placeholder="Deal Properties">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Deal by ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "update-deal"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-2" name="deal_id" placeholder="Deal ID">
+                                <input type="text" class="form-control" name="deal_properties" placeholder="Deal Properties">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Update Deal by ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-all-deals"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-2" name="deal_properties" placeholder="Deal Properties">
+                                <input type="number" class="form-control" name="deal_limit" placeholder="Limit">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Deals</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Deal Associations -->
+                    <div class="col-12">
+                    <h4 class="h5 mt-3 mb-2">Deal Associations</h4>
+                    </div>
+                    
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-contacts-by-deal-id"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Contacts by Deal ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-companies-by-deal-id"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Companies by Deal ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-emails-by-deal-id"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Emails by Deal ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-notes-by-deal-id"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Notes by Deal ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-tasks-by-deal-id"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Tasks by Deal ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-quotes-by-deal-id"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Quotes by Deal ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-deal-associated-quotes"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Deal Associated Quotes</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-deal-associated-contacts"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Deal Associated Contacts</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-deal-associated-companies"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-2" name="deal_id" placeholder="Deal ID">
+                                <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="primaryCompaniesOnly">
+                                <label class="form-check-label" for="primaryCompaniesOnly">Primary Companies Only?</label>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Deal Associated Companies</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-deal-associated-engagements"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Deal Associated Engagements</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-most-recent-deal-associated-engagements"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Most Recent Deal Associated Engagements</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "latest-deal-quote-public-url-key"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Latest Deal Quote Public URL Key</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Other HubSpot Object Functions -->
+                    <div class="col-12">
+                    <h4 class="h5 mt-3 mb-2">Other HubSpot Objects</h4>
+                    </div>
+                    
+                    <div class="col-12 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-contact"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-2" name="contact_id" placeholder="Contact ID">
+                                <input type="text" class="form-control" name="contact_properties" placeholder="Contact Properties">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Contact by ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-company"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-2" name="company_id" placeholder="Company ID">
+                                <input type="text" class="form-control" name="company_properties" placeholder="Company Properties">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Company by ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-email"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-2" name="email_id" placeholder="Email ID">
+                                <input type="text" class="form-control" name="email_properties" placeholder="Email Properties">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Email by ID</button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-note"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-2" name="note_id" placeholder="Note ID">
+                                <input type="text" class="form-control" name="note_properties" placeholder="Note Properties">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Note by ID</button>
+                        </form>
+                    </div>
+                    
+                    <div class="col-12 col-md-4">
+                        <form
+                            hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                            hx-swap="none"
+                            hx-headers='{"X-Function": "get-engagement"}'>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" name="engagement_id" placeholder="Engagement ID">
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Get Engagement by ID</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Utility Functions -->
+                    <div class="col-12">
+                    <h4 class="h5 mt-3 mb-2">Utility Functions</h4>
+                    </div>
+                    {% comment %}
+                    <div class="col-12 col-sm-6 col-md-3">
+                    <button
+                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                        hx-swap="none"
+                        hx-headers='{"X-Function": "get-sites"}'
+                    class="btn btn-outline-primary w-100">Associate Objects</button>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                    <button
+                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                        hx-swap="none"
+                        hx-headers='{"X-Function": "get-sites"}'
+                    class="btn btn-outline-primary w-100">Search Objects</button>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                    <button
+                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
+                        hx-swap="none"
+                        hx-headers='{"X-Function": "get-sites"}'
+                    class="btn btn-outline-primary w-100">Collect and Parse Deal Data</button>
+                    </div>
+                    {% endcomment %}
                 </div>
             </div>
         </div>
     </div>
-
-
-    <!-- HubSpot Functions Section -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <h3 class="h4 mb-0">HubSpot Functions</h3>
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <!-- Owner Functions -->
-                <div class="col-12 col-md-4">
-                <button
-                    hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                    hx-swap="none"
-                    hx-headers='{"X-Function": "get-all-owners"}'
-                    class="btn btn-outline-primary w-100">Get All Owners</button>
-                </div>
-                <div class="col-12 col-md-4">
-                    <form
-                    hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                    hx-swap="none"
-                    hx-headers='{"X-Function": "get-owner"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="owner_id" placeholder="Owner ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Owner by ID</button>
-                    </form>
-                </div>
-
-                <!-- Deal Functions -->
-                <div class="col-12">
-                <h4 class="h5 mt-3 mb-2">Deal Operations</h4>
-                </div>
-                
-                <div class="col-12 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-deal"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control mb-2" name="deal_id" placeholder="Deal ID">
-                            <input type="text" class="form-control" name="deal_properties" placeholder="Deal Properties">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Deal by ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "update-deal"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control mb-2" name="deal_id" placeholder="Deal ID">
-                            <input type="text" class="form-control" name="deal_properties" placeholder="Deal Properties">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Update Deal by ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-all-deals"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control mb-2" name="deal_properties" placeholder="Deal Properties">
-                            <input type="number" class="form-control" name="deal_limit" placeholder="Limit">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Deals</button>
-                    </form>
-                </div>
-                
-                <!-- Deal Associations -->
-                <div class="col-12">
-                <h4 class="h5 mt-3 mb-2">Deal Associations</h4>
-                </div>
-                
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-contacts-by-deal-id"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Contacts by Deal ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-companies-by-deal-id"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Companies by Deal ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-emails-by-deal-id"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Emails by Deal ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-notes-by-deal-id"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Notes by Deal ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-tasks-by-deal-id"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Tasks by Deal ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-quotes-by-deal-id"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Quotes by Deal ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-deal-associated-quotes"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Deal Associated Quotes</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-deal-associated-contacts"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Deal Associated Contacts</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-deal-associated-companies"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control mb-2" name="deal_id" placeholder="Deal ID">
-                            <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="primaryCompaniesOnly">
-                            <label class="form-check-label" for="primaryCompaniesOnly">Primary Companies Only?</label>
-                            </div>
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Deal Associated Companies</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-deal-associated-engagements"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Deal Associated Engagements</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-most-recent-deal-associated-engagements"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Most Recent Deal Associated Engagements</button>
-                    </form>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "latest-deal-quote-public-url-key"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="deal_id" placeholder="Deal ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Latest Deal Quote Public URL Key</button>
-                    </form>
-                </div>
-                
-                <!-- Other HubSpot Object Functions -->
-                <div class="col-12">
-                <h4 class="h5 mt-3 mb-2">Other HubSpot Objects</h4>
-                </div>
-                
-                <div class="col-12 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-contact"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control mb-2" name="contact_id" placeholder="Contact ID">
-                            <input type="text" class="form-control" name="contact_properties" placeholder="Contact Properties">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Contact by ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-company"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control mb-2" name="company_id" placeholder="Company ID">
-                            <input type="text" class="form-control" name="company_properties" placeholder="Company Properties">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Company by ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-email"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control mb-2" name="email_id" placeholder="Email ID">
-                            <input type="text" class="form-control" name="email_properties" placeholder="Email Properties">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Email by ID</button>
-                    </form>
-                </div>
-                <div class="col-12 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-note"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control mb-2" name="note_id" placeholder="Note ID">
-                            <input type="text" class="form-control" name="note_properties" placeholder="Note Properties">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Note by ID</button>
-                    </form>
-                </div>
-                
-                <div class="col-12 col-md-4">
-                    <form
-                        hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                        hx-swap="none"
-                        hx-headers='{"X-Function": "get-engagement"}'>
-                        <div class="mb-2">
-                            <input type="text" class="form-control" name="engagement_id" placeholder="Engagement ID">
-                        </div>
-                        <button class="btn btn-outline-primary w-100">Get Engagement by ID</button>
-                    </form>
-                </div>
-                
-                <!-- Utility Functions -->
-                <div class="col-12">
-                <h4 class="h5 mt-3 mb-2">Utility Functions</h4>
-                </div>
-                {% comment %}
-                <div class="col-12 col-sm-6 col-md-3">
-                <button
-                    hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                    hx-swap="none"
-                    hx-headers='{"X-Function": "get-sites"}'
-                class="btn btn-outline-primary w-100">Associate Objects</button>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                <button
-                    hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                    hx-swap="none"
-                    hx-headers='{"X-Function": "get-sites"}'
-                class="btn btn-outline-primary w-100">Search Objects</button>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                <button
-                    hx-get="{% url 'dashboard:get-api-response' customer_slug=customer.slug %}"
-                    hx-swap="none"
-                    hx-headers='{"X-Function": "get-sites"}'
-                class="btn btn-outline-primary w-100">Collect and Parse Deal Data</button>
-                </div>
-                {% endcomment %}
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock content %}
 
 {% comment %}
