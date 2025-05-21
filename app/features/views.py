@@ -218,7 +218,7 @@ def hubspot_to_msgraph_webhook_listener(request):
     """
     request_id = f"req_{int(time.time() * 1000)}"
     logger.info(f"[{request_id}] Received HubSpot webhook request")
-    logger.inf0(f"{vars(request)}")
+    logger.info(f"{request}")
     
     try:
         # Extract query parameters
