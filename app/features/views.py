@@ -225,7 +225,13 @@ def hubspot_to_msgraph_webhook_listener(request):
     
     try:
         # Extract query parameters
-        portal_id = request.GET.get("portalId")
+        try:
+            body = json.loads(request.body)
+            portal_id = body.get("portalId") or body.get("portal_id")
+            logger.info(f"Portal ID: {portal_id}")
+        except Exception as e:
+            logger.warning(f"Could not extract portal ID from body: {e}")
+
         object_id = request.GET.get("objectId")
         
         if not portal_id:
