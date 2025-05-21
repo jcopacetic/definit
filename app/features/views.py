@@ -50,34 +50,52 @@ def hubspot_signature_required(f):
 
 
 def validate_hubspot_signature(request, customer: Customer) -> None:
+    """
+    Validates a HubSpot webhook request using the v3 signature scheme.
+
+    Args:
+        request: The Django HTTP request.
+        customer: The customer instance with a HubSpot private app key.
+
+    Raises:
+        WebhookValidationError: If validation fails at any point.
+    """
     signature_header = request.headers.get("X-HubSpot-Signature-v3")
     if not signature_header:
+        logger.warning("Missing HubSpot signature header")
         raise WebhookValidationError("Missing HubSpot signature header")
 
     timestamp = request.headers.get("X-HubSpot-Request-Timestamp")
     if not timestamp:
+        logger.warning("Missing HubSpot timestamp header")
         raise WebhookValidationError("Missing HubSpot timestamp header")
 
     try:
         current_time = int(time.time() * 1000)
         request_time = int(timestamp)
     except ValueError:
+        logger.warning("Invalid HubSpot timestamp format")
         raise WebhookValidationError("Invalid timestamp format", 400)
 
-    max_allowed_age = 300_000  # 5 minutes in ms
-    if current_time - request_time > max_allowed_age:
+    max_age_ms = 300_000  # 5 minutes
+    if current_time - request_time > max_age_ms:
+        logger.warning(f"Request expired. Current time: {current_time}, request time: {request_time}")
         raise WebhookValidationError("Request expired - timestamp too old")
 
     secret = customer.hubspot_secret_app_key
     if not secret:
-        logger.critical(f"Customer {customer.id} has no HubSpot secret app key")
+        logger.critical(f"Customer {customer.id} missing HubSpot secret key")
         raise WebhookValidationError("HubSpot secret not configured for customer", 500)
 
     try:
         method = request.method.upper()
-        uri = request.build_absolute_uri()
-        body = request.body or b""
+        host = request.get_host()
+        raw_query = request.META.get("QUERY_STRING", "")
+        uri = f"https://{host}{request.path}"
+        if raw_query:
+            uri += f"?{raw_query}"
 
+        body = request.body or b""
         signature_base = method.encode("utf-8") + \
                          uri.encode("utf-8") + \
                          body + \
@@ -88,14 +106,15 @@ def validate_hubspot_signature(request, customer: Customer) -> None:
             msg=signature_base,
             digestmod=hashlib.sha256
         ).digest()
-
         calculated_b64 = base64.b64encode(calculated).decode("utf-8")
     except Exception as e:
-        logger.exception(f"Error calculating signature: {str(e)}")
+        logger.exception("Error during signature calculation")
         raise WebhookValidationError("Error calculating signature", 500)
 
     if not hmac.compare_digest(calculated_b64, signature_header):
+        logger.warning("Signature mismatch during HubSpot validation")
         raise WebhookValidationError("Invalid HubSpot signature")
+
 
 
 def parse_webhook_payload(request) -> Dict[str, Any]:
