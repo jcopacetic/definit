@@ -321,6 +321,8 @@ def remove_deal_from_sheet(customer, object_id):
         )
         
         if remove_row_from_sheet:
+            customerfeature.worksheet_last_row -= 1
+            customerfeature.save()
             logger.info(f"Successfully removed deal '{object_id}' from Excel sheet for customer '{customer}'")
             return HttpResponse("Deal removed from sheet successfully", status=200)
         else:
