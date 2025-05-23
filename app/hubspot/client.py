@@ -715,11 +715,80 @@ class HubSpotClient:
         return ""
 
 
-    def collect_parse_deal_data(self, limit=30):
+    def collect_parse_all_deals_data(self, limit=30):
         try:
             logger.info(f"Collecting and parsing up to {limit} deals...")
             deals_info_and_egagements = {}
             deals = self.get_deals(limit)
+
+            for deal in deals:
+                deal_id = deal.get("id")
+                if not deal_id:
+                    logger.warning("Deal missing ID. Skipping.")
+                    continue
+
+                logger.info(f"Processing deal ID: {deal_id}")
+                deal_properties = deal.get("properties", {})
+                deal_engagements = self.find_most_recent_engagement(deal_id)
+
+                if not deal_engagements.get("total_engagements", {}).get("latest_engagement"):
+                    logger.info(f"No recent engagements for deal {deal_id}")
+                    continue
+
+                latest_quote_url = self.get_latest_quote_public_url_key(deal_id)
+
+                last_contacted = self.parse_last_contact(deal_engagements)
+                last_engagement = self.parse_last_engagement(deal_engagements)
+
+                deal_data = {
+                    "name": deal_properties.get("dealname", "Unknown Deal"),
+                    "deal_link": self.BUILD_URL_TO_PORTAL_DEAL(deal_id),
+                    "plans_link": deal_properties.get("amount", ""),
+                    "quote_link": latest_quote_url[0],
+                    "deal_stage": self.parse_stage_label(deal_properties),
+                    "latest_bid_date": latest_quote_url[1],
+                    "deal_amount": self.parse_deal_amount(deal_properties.get("amount")),
+                    "deal_owner": self.parse_owner(deal_properties.get("hubspot_owner_id", "")),
+                    "associated_contact": self.parse_contacts(deal_id),
+                    "associated_company": "",
+                    "city": "",
+                    "state": "",
+                    "last_contacted": last_contacted[1],
+                    "last_contacted_type": last_contacted[0],
+                    "last_engagement": last_engagement[1],
+                    "last_engagement_type": last_engagement[0],
+                    "email": self.extract_preview(deal_engagements, "email"),
+                    "note": self.extract_preview(deal_engagements, "note"),
+                    "task": self.extract_preview(deal_engagements, "task"),
+                    "meeting": self.extract_preview(deal_engagements, "meeting"),
+                    "call": self.extract_preview(deal_engagements, "call"),
+                }
+
+                company_info = self.parse_company_info(deal_id)
+                deal_data["associated_company"] = company_info.get("name", "")
+                deal_data["city"] = company_info.get("city", "")
+                deal_data["state"] = company_info.get("state", "")
+
+                deals_info_and_egagements[deal_id] = deal_data
+
+            with open("deals_and_emails.json", "w") as f:
+                json.dump(deals_info_and_egagements, f, indent=2)
+
+            logger.info("Deal parse to sheet complete")
+
+            logger.info("Deal collection complete.")
+            return deals_info_and_egagements
+
+        except Exception as e:
+            logger.exception("Error while building deals-emails collection")
+            return None
+        
+
+    def collect_parse_deal_data(self, deal_id):
+        try:
+            logger.info(f"Collecting and parsing deal {deal_id}...")
+            deals_info_and_egagements = {}
+            deals = [self.get_deal(deal_id)]
 
             for deal in deals:
                 deal_id = deal.get("id")
