@@ -291,7 +291,7 @@ def hubspot_to_msgraph_webhook_listener(request):
             event_type = payload.get("subscriptionType", "unknown")
             logger.info(f"[{request_id}] Processing HubSpot event {event_id} of type {event_type}")
 
-        return JsonResponse({"status": "success"})
+        # return JsonResponse({"status": "success"})
 
     except ValueError as e:
         logger.error(f"[{request_id}] Payload parsing failed: {e}")
