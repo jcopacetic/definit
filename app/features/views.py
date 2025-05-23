@@ -14,6 +14,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from app.dashboard.models import Customer
+from app.features.models import CustomerFeature
+
 from app.hubspot.client import HubSpotClient
 from app.ms_graph.client import MSGraphClient
 
@@ -259,13 +261,13 @@ def hubspot_to_msgraph_webhook_listener(request):
         logger.error(f"[{request_id}] Customer lookup failed: {e}")
         return JsonResponse({"error": f"Customer lookup failed: {str(e)}"}, status=400)
 
-    # --- Step 4: Validate HubSpot signature ---
-    try:
-        validate_hubspot_signature(request, customer)
-        logger.debug(f"[{request_id}] HubSpot signature validation successful")
-    except WebhookValidationError as e:
-        logger.warning(f"[{request_id}] Webhook signature validation failed: {e.message}")
-        return HttpResponseForbidden(e.message)
+    # # --- Step 4: Validate HubSpot signature ---
+    # try:
+    #     validate_hubspot_signature(request, customer)
+    #     logger.debug(f"[{request_id}] HubSpot signature validation successful")
+    # except WebhookValidationError as e:
+    #     logger.warning(f"[{request_id}] Webhook signature validation failed: {e.message}")
+    #     return HttpResponseForbidden(e.message)
 
     # --- Step 5: Parse payload ---
     try:
