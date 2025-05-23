@@ -441,7 +441,7 @@ def hubspot_to_msgraph_webhook_listener(request):
         
     if event_type == "deal.deletion":
         try:
-            remove_deal_from_sheet = remove_deal_from_sheet(customer, object_id)
+            removed_deal = remove_deal_from_sheet(customer, object_id)
         except Exception as e:
             logger.exception(f"[{request_id}] Error during deal deletion: {e}")
             return JsonResponse({"error": "Processing failure", "message": str(e)}, status=500)
