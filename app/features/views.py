@@ -5,10 +5,10 @@ import json
 import logging
 import time
 from functools import wraps
-from typing import Dict, Any, Union, Tuple, Optional
+from typing import Dict, Any, Union, Tuple, Optional, List
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -122,21 +122,28 @@ def validate_hubspot_signature(request, customer: Customer) -> None:
 
 
 
-def parse_webhook_payload(request) -> Dict[str, Any]:
+def parse_webhook_payload(request: HttpRequest) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
     """
     Parse and validate the webhook payload.
-    
+
     Returns:
-        Dict containing the parsed payload
+        Parsed JSON payload (either a dict or list of dicts)
         
     Raises:
-        ValueError: If parsing fails
+        ValueError: If parsing or validation fails
     """
     try:
-        payload = json.loads(request.body.decode('utf-8'))
-        if not isinstance(payload, dict):
-            raise ValueError("Payload must be a JSON object")
-        return payload
+        raw_body = request.body.decode('utf-8')
+        logger.debug(f"Raw webhook payload: {raw_body}")
+        payload = json.loads(raw_body)
+        
+        if isinstance(payload, dict):
+            return payload
+        elif isinstance(payload, list) and all(isinstance(item, dict) for item in payload):
+            return payload
+        else:
+            raise ValueError("Payload must be a JSON object or a list of JSON objects")
+    
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse webhook JSON payload: {str(e)}")
         raise ValueError(f"Invalid JSON: {str(e)}")
@@ -270,11 +277,22 @@ def hubspot_to_msgraph_webhook_listener(request):
     #     return HttpResponseForbidden(e.message)
 
     # --- Step 5: Parse payload ---
+    request_id = f"req_{int(time.time() * 1000)}"  # Example request ID, adjust as needed
     try:
         payload = parse_webhook_payload(request)
-        event_id = payload.get("eventId", "unknown")
-        event_type = payload.get("subscriptionType", "unknown")
-        logger.info(f"[{request_id}] Processing HubSpot event {event_id} of type {event_type}")
+
+        if isinstance(payload, list):
+            for event in payload:
+                event_id = event.get("eventId", "unknown")
+                event_type = event.get("subscriptionType", "unknown")
+                logger.info(f"[{request_id}] Processing HubSpot event {event_id} of type {event_type}")
+        else:
+            event_id = payload.get("eventId", "unknown")
+            event_type = payload.get("subscriptionType", "unknown")
+            logger.info(f"[{request_id}] Processing HubSpot event {event_id} of type {event_type}")
+
+        return JsonResponse({"status": "success"})
+
     except ValueError as e:
         logger.error(f"[{request_id}] Payload parsing failed: {e}")
         return JsonResponse({"error": str(e)}, status=400)
