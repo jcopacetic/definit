@@ -1204,7 +1204,7 @@ class MSGraphClient:
 
     def delete_row_by_number(self, workbook_id: str, worksheet_name: str, row_number: int) -> bool:
         """
-        Delete a specific row by its row number.
+        Delete a specific row by its row number using the correct Microsoft Graph API method.
         
         Args:
             workbook_id (str): The ID of the workbook
@@ -1215,11 +1215,16 @@ class MSGraphClient:
             bool: True if row was deleted successfully, False otherwise
         """
         try:
-            # Construct the URL for the row range
-            url = f"{self.items_path}/{workbook_id}/workbook/worksheets/{worksheet_name}/range(address='{row_number}:{row_number}')"
+            # Use the correct Microsoft Graph API endpoint for deleting entire rows
+            # This uses the deleteShift method which is the proper way to delete rows
+            url = f"{self.items_path}/{workbook_id}/workbook/worksheets/{worksheet_name}/range(address='{row_number}:{row_number}')/delete"
             
-            # Make DELETE request to remove the entire row
-            result = self._make_request("DELETE", url)
+            body = {
+                "shift": "Up"  # Shift remaining rows up after deletion
+            }
+            
+            # Make POST request to the delete endpoint
+            result = self._make_request("POST", url, json_data=body)
             
             logger.info(f"Successfully deleted row {row_number} from worksheet {worksheet_name}")
             return True
