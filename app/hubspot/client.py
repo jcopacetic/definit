@@ -64,9 +64,9 @@ def FORMAT_CURRENCY(amount):
 
 class HubSpotClient: 
 
-    def __init__(self):
+    def __init__(self, hs_secret_key):
         self.PORTAL_ID = "46658116"
-        self.ACCESS_TOKEN = access_token
+        self.ACCESS_TOKEN = hs_secret_key
 
         self.BASE_URL = "https://api.hubapi.com"
         self.EMAILS_PATH = f"{self.BASE_URL}/crm/v3/objects/emails"
