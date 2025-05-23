@@ -1170,3 +1170,87 @@ class MSGraphClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error: {str(e)}")
             return f"Request error: {str(e)}"
+        
+
+
+    def delete_row_by_id(self, workbook_id: str, worksheet_name: str, id_column: str, id_value: Any) -> bool:
+        """
+        Delete a row by finding it using an ID value.
+        
+        Args:
+            workbook_id (str): The ID of the workbook
+            worksheet_name (str): The name of the worksheet
+            id_column (str): The column letter or header name containing IDs
+            id_value (Any): The ID value to search for
+            
+        Returns:
+            bool: True if row was found and deleted successfully, False otherwise
+        """
+        try:
+            # Find the row by ID
+            row_to_delete = self.find_row_by_id(workbook_id, worksheet_name, id_column, id_value)
+            
+            if row_to_delete is None:
+                logger.warning(f"Row with ID '{id_value}' not found in column {id_column}")
+                return False
+                
+            # Delete the found row
+            return self.delete_row_by_number(workbook_id, worksheet_name, row_to_delete)
+            
+        except Exception as e:
+            logger.error(f"Error deleting row by ID '{id_value}': {str(e)}")
+            return False
+
+
+    def delete_row_by_number(self, workbook_id: str, worksheet_name: str, row_number: int) -> bool:
+        """
+        Delete a specific row by its row number.
+        
+        Args:
+            workbook_id (str): The ID of the workbook
+            worksheet_name (str): The name of the worksheet
+            row_number (int): The 1-based row number to delete
+            
+        Returns:
+            bool: True if row was deleted successfully, False otherwise
+        """
+        try:
+            # Construct the URL for the row range
+            url = f"{self.items_path}/{workbook_id}/workbook/worksheets/{worksheet_name}/range(address='{row_number}:{row_number}')"
+            
+            # Make DELETE request to remove the entire row
+            result = self._make_request("DELETE", url)
+            
+            logger.info(f"Successfully deleted row {row_number} from worksheet {worksheet_name}")
+            return True
+            
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP Error {e.response.status_code} while deleting row {row_number}: {e.response.text}")
+            return False
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error while deleting row {row_number}: {str(e)}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error while deleting row {row_number}: {str(e)}")
+            return False
+
+
+    def delete_deal_from_excel_sheet(self, workbook_id: str, worksheet_name: str, deal_id: str) -> bool:
+        """
+        Delete a deal row from the Excel sheet by deal ID.
+        
+        Args:
+            workbook_id (str): The ID of the workbook
+            worksheet_name (str): The name of the worksheet
+            deal_id (str): The deal ID to search for and delete
+            
+        Returns:
+            bool: True if deal was found and deleted successfully, False otherwise
+        """
+        try:
+            # Assuming deal_id is in column A (adjust as needed)
+            return self.delete_row_by_id(workbook_id, worksheet_name, "A", deal_id)
+            
+        except Exception as e:
+            logger.error(f"Error deleting deal '{deal_id}' from Excel sheet: {str(e)}")
+            return False

@@ -4,6 +4,7 @@ import hmac
 import json
 import logging
 import time
+import requests
 from functools import wraps
 from typing import Dict, Any, Union, Tuple, Optional, List
 
@@ -191,7 +192,7 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
         
         # Get updated deal data from HubSpot
         deal_parse = hs_client.collect_parse_deal_data(deal_id)
-        logger.info(f"deal parse: {deal_parse}")
+
         if not deal_parse:
             logger.error(f"Could not fetch deal {deal_id} from HubSpot")
             return False, f"Could not fetch deal {deal_id}"
@@ -268,6 +269,74 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
     except Exception as e:
         logger.exception(f"Error processing deal stage change for deal {deal_id}: {str(e)}")
         return False, f"Error processing deal: {str(e)}"
+
+
+def remove_deal_from_sheet(customer, object_id):
+    """
+    Remove a deal from the Excel sheet by deleting the corresponding row.
+    
+    Args:
+        customer: Customer object
+        object_id: The deal ID to remove from the sheet
+        
+    Returns:
+        HttpResponse: HTTP response indicating success or failure
+    """
+    logger.info(f"Attempting to remove deal '{object_id}' from sheet for customer '{customer}'")
+    
+    try:
+        # Initialize MS Graph client
+        ms_client = MSGraphClient(customer)
+        logger.debug(f"MS Graph client initialized for customer '{customer}'")
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize MS Graph client for customer '{customer}': {str(e)}")
+        return HttpResponse("Failed to initialize Microsoft Graph client", status=500)
+
+    try:
+        # Get customer feature configuration
+        customerfeature = CustomerFeature.objects.get(customer=customer, feature__id=1)
+        logger.debug(f"Retrieved customer feature - workbook_id: {customerfeature.workbook_id}, worksheet: {customerfeature.worksheet_name}")
+        
+    except CustomerFeature.DoesNotExist:
+        logger.warning(f"Customer feature doesn't exist for customer '{customer}' and feature id 1")
+        return HttpResponse("Customer feature configuration not found", status=404)
+    except Exception as e:
+        logger.error(f"Unexpected error retrieving customer feature for customer '{customer}': {str(e)}")
+        return HttpResponse("Error retrieving customer configuration", status=500)
+
+    # Validate required configuration
+    if not customerfeature.workbook_id or not customerfeature.worksheet_name:
+        logger.error(f"Missing required configuration - workbook_id: {customerfeature.workbook_id}, worksheet_name: {customerfeature.worksheet_name}")
+        return HttpResponse("Incomplete Excel sheet configuration", status=400)
+
+    try:
+        # Attempt to remove the deal from the Excel sheet
+        logger.info(f"Removing deal '{object_id}' from workbook '{customerfeature.workbook_id}', worksheet '{customerfeature.worksheet_name}'")
+        
+        remove_row_from_sheet = ms_client.delete_deal_from_excel_sheet(
+            customerfeature.workbook_id, 
+            customerfeature.worksheet_name,
+            object_id,
+        )
+        
+        if remove_row_from_sheet:
+            logger.info(f"Successfully removed deal '{object_id}' from Excel sheet for customer '{customer}'")
+            return HttpResponse("Deal removed from sheet successfully", status=200)
+        else:
+            logger.warning(f"Failed to remove deal '{object_id}' from Excel sheet - deal may not exist or API call failed")
+            return HttpResponse("Deal not found in sheet or removal failed", status=404)
+            
+    except Exception as e:
+        logger.error(f"Unexpected error removing deal '{object_id}' from Excel sheet for customer '{customer}': {str(e)}")
+        return HttpResponse("Error removing deal from sheet", status=500)
+    
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"HTTP Error removing deal '{object_id}': {e.response.status_code} - {e.response.text}")
+        return HttpResponse(f"Microsoft Graph API error: {e.response.status_code}", status=502)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request error removing deal '{object_id}': {str(e)}")
+        return HttpResponse("Network error communicating with Microsoft Graph", status=503)
 
 
 @csrf_exempt
@@ -357,7 +426,7 @@ def hubspot_to_msgraph_webhook_listener(request):
         return JsonResponse({"error": str(e)}, status=400)
 
     # --- Step 6: Handle specific event types ---
-    if event_type == "deal.propertyChange":
+    if event_type in ["deal.propertyChange", "deal.creation", "deal.associationChange"]:
         try:
             success, message = process_deal_stage_change(customer, object_id, payload)
             if success:
@@ -369,6 +438,14 @@ def hubspot_to_msgraph_webhook_listener(request):
         except Exception as e:
             logger.exception(f"[{request_id}] Error during deal stage processing: {e}")
             return JsonResponse({"error": "Processing failure", "message": str(e)}, status=500)
+        
+    if event_type == "deal.deletion":
+        try:
+            remove_deal_from_sheet = remove_deal_from_sheet(customer, object_id)
+        except Exception as e:
+            logger.exception(f"[{request_id}] Error during deal deletion: {e}")
+            return JsonResponse({"error": "Processing failure", "message": str(e)}, status=500)
+
     else:
         logger.info(f"[{request_id}] Unhandled event type: {event_type}")
         return HttpResponse("Acknowledged unhandled event type", status=202)
