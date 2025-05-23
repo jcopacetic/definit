@@ -64,7 +64,7 @@ def FORMAT_CURRENCY(amount):
 
 class HubSpotClient: 
 
-    def __init__(self, access_token):
+    def __init__(self):
         self.PORTAL_ID = "46658116"
         self.ACCESS_TOKEN = access_token
 
@@ -622,11 +622,11 @@ class HubSpotClient:
         
         return None
 
-    def parse_stage_label(self, properties, access_token):
+    def parse_stage_label(self, properties):
         stage_id = properties.get("dealstage")
         pipeline_id = properties.get("pipeline")
         if stage_id and pipeline_id:
-            return self.get_stage_label(pipeline_id, stage_id, access_token) or stage_id
+            return self.get_stage_label(pipeline_id, stage_id) or stage_id
         return stage_id or "Unknown Stage"
 
 
@@ -637,29 +637,29 @@ class HubSpotClient:
         except (ValueError, TypeError):
             return amount_str or ""
 
-    def parse_owner(self, owner_id, access_token):
-        owner = self.get_owner(owner_id, access_token)
+    def parse_owner(self, owner_id):
+        owner = self.get_owner(owner_id)
         if not owner:
             return "Unknown Owner"
         archived = " (Deactivated User)" if owner.get("archived") else ""
         return f"{owner.get('firstName', '')} {owner.get('lastName', '')}{archived}".strip()
 
-    def parse_contacts(self, deal_id, access_token):
-        contacts = self.get_deal_associated_contacts(deal_id, access_token)
+    def parse_contacts(self, deal_id):
+        contacts = self.get_deal_associated_contacts(deal_id)
         contact_str = ""
         for contact_id in contacts:
-            contact = self.get_contact(contact_id, access_token)
+            contact = self.get_contact(contact_id)
             if not contact:
                 continue
             props = contact.get("properties", {})
             contact_str += f"{props.get('firstname', '')} {props.get('lastname', '')} ({props.get('email', '')}); "
         return contact_str.strip()
 
-    def parse_company_info(self, deal_id, access_token):
-        companies = self.get_deal_associated_companies(deal_id, access_token, primary=True)
+    def parse_company_info(self, deal_id):
+        companies = self.get_deal_associated_companies(deal_id, primary=True)
         if not companies:
             return {}
-        company = self.get_company(companies[0], access_token)
+        company = self.get_company(companies[0])
         if not company:
             return {}
         props = company.get("properties", {})
