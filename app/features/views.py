@@ -190,19 +190,71 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
         hs_client = HubSpotClient(customer.hubspot_secret_app_key)
         
         # Get updated deal data from HubSpot
-        deal = hs_client.get_deal(deal_id)
-        if not deal:
+        deal_parse = hs_client.collect_parse_deal_data(deal_id)
+        if not deal_parse:
             logger.error(f"Could not fetch deal {deal_id} from HubSpot")
             return False, f"Could not fetch deal {deal_id}"
         
-        logger.info(f"Successfully fetched deal {deal_id} data: {json.dumps(deal)[:200]}...")
+        logger.info(f"Successfully parsed  deal {deal_id} data: {json.dumps(deal_parse)[:200]}...")
         
-        # TODO: Logic for looking up Excel row by deal ID
-        # TODO: Logic for updating deal row in Excel/MS Graph
-        
-        # Initialize MS Graph client if needed
-        # ms_graph_client = MSGraphClient(customer.msgraph_access_token)
-        # response = ms_graph_client.update_excel_row(...)
+        try:
+            customerfeature = CustomerFeature.objects.get(customer=customer, feature__id=1)
+        except CustomerFeature.DoesNotExist:
+            logger.warning("customer feature doesn't exist")
+            return HttpResponse(status=404)
+
+        for deal_id, details in deal_parse.items():
+            logger.info(f"Processing deal {deal_id}")
+
+            data_to_add = {
+                "deal_id": deal_id,
+                "name": details.get('name', ''),
+                "deal_link": details.get("deal_link", ""),
+                "plans_link": details.get('plans_link', ""),
+                "quote_link": details.get("quote_link", ""),
+                "deal_stage": details.get("deal_stage", ""),
+                "latest_bid_date": details.get("latest_bid_date", ""),
+                "deal_amount": details.get("deal_amount", ""),
+                "deal_owner": details.get("deal_owner", ""),
+                "associated_contact": details.get("associated_contact", ""),
+                "associated_company": details.get("associated_company", ""),
+                "city": details.get("city", ""),
+                "state": details.get("state", ""),
+                "last_contacted": details.get("last_contacted", ""),
+                "last_contacted_type": details.get("last_contacted_type"),
+                "last_engagement": details.get("last_engagement"),
+                "last_engagement_type": details.get("last_engagement_type"),
+                "email": details.get("email", ""),
+                "note": details.get("note", ""),
+                "task": details.get("task", ""),
+                "meeting": details.get("meeting", ""),
+                "call": details.get("call", ""),
+            }
+
+            ms_client = MSGraphClient(customer)
+
+            is_existing_row = ms_client.find_row_by_id(
+                customerfeature.workbook_id, 
+                customerfeature.worksheet_id, 
+                "Record ID",
+                deal_id,
+            )
+
+            if is_existing_row:
+                row_to_update = is_existing_row
+            else: 
+                row_to_update = customerfeature.worksheet_last_row + 1
+
+            parse_row = ms_client.parse_deal_to_excel_sheet(
+                customerfeature.workbook_id, 
+                customerfeature.worksheet_name, 
+                data_to_add, 
+                row_to_update,
+            )
+
+            if parse_row and not is_existing_row:
+                customerfeature.worksheet_last_row += 1
+                customerfeature.save()
         
         return True, "Deal stage change processed successfully"
         
