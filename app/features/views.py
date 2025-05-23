@@ -191,6 +191,7 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
         
         # Get updated deal data from HubSpot
         deal_parse = hs_client.collect_parse_deal_data(deal_id)
+        logger.info(f"deal parse: {deal_parse}")
         if not deal_parse:
             logger.error(f"Could not fetch deal {deal_id} from HubSpot")
             return False, f"Could not fetch deal {deal_id}"
@@ -231,6 +232,8 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
                 "call": details.get("call", ""),
             }
 
+            logger.info(f"built data: {data_to_add}")
+
             ms_client = MSGraphClient(customer)
 
             is_existing_row = ms_client.find_row_by_id(
@@ -239,6 +242,8 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
                 "Record ID",
                 deal_id,
             )
+
+            logger.info(f"is_existing_row: {is_existing_row}")
 
             if is_existing_row:
                 row_to_update = is_existing_row
@@ -251,6 +256,8 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
                 data_to_add, 
                 row_to_update,
             )
+
+            logger.info(f"parse results: {parse_row}")
 
             if parse_row and not is_existing_row:
                 customerfeature.worksheet_last_row += 1

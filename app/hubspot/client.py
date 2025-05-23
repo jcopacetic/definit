@@ -771,11 +771,6 @@ class HubSpotClient:
 
                 deals_info_and_egagements[deal_id] = deal_data
 
-            with open("deals_and_emails.json", "w") as f:
-                json.dump(deals_info_and_egagements, f, indent=2)
-
-            logger.info("Deal parse to sheet complete")
-
             logger.info("Deal collection complete.")
             return deals_info_and_egagements
 
