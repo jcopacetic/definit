@@ -34,9 +34,9 @@ class MSGraphClient:
         self.drive_id = customer.msgraph_drive_id
         self.base_url = "https://graph.microsoft.com/v1.0"
         
-        self.sites_path = f"{self.base_url}/sites/{customer.msgraph_site_id}"
-        self.drives_path = f"{self.base_url}/drives/{customer.msgraph_site_id}"
-        self.items_path = f"{self.sites_path}/drives/{customer.msgraph_site_id}/items"
+        self.sites_path = f"{self.base_url}/sites/{self.site_id}"
+        self.drives_path = f"{self.base_url}/drives/{self.drive_id}"
+        self.items_path = f"{self.sites_path}/drives/{self.drive_id}/items"
         
         # Create download folder if it doesn't exist
         self._check_download_folder()
