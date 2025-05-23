@@ -1254,7 +1254,7 @@ class MSGraphClient:
         """
         try:
             # Assuming deal_id is in column A (adjust as needed)
-            return self.delete_row_by_id(workbook_id, worksheet_name, "A", deal_id)
+            return self.delete_row_by_id(workbook_id, worksheet_name, "Record ID", deal_id)
             
         except Exception as e:
             logger.error(f"Error deleting deal '{deal_id}' from Excel sheet: {str(e)}")
