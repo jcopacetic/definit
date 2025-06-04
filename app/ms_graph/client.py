@@ -1136,7 +1136,7 @@ class MSGraphClient:
                     data_to_add["deal_stage"],
                     data_to_add["deal_owner"],
                     "",
-                    f'=HYPERLINK("#", "update")',
+                    f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/{row_to_update}/", "update")',
                     amount_parse,
                     data_to_add["last_contacted"],
                     data_to_add["last_contacted_type"],
