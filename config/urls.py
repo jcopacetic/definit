@@ -25,6 +25,7 @@ urlpatterns = [
     # Your stuff: custom urls includes go here
     path("dashboard/", include("app.dashboard.urls")),
     path("features/", include("app.features.urls")),
+    path("excel/", include("app.ms_graph.urls")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
