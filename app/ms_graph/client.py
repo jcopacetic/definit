@@ -1128,6 +1128,8 @@ class MSGraphClient:
                 else data_to_add.get("deal_amount", "")
             )
 
+            update_link = f'https://integration00.definit.com/excel/excel-note-to-hubspot/{row_to_update}/'
+
             values = [
                 [
                     data_to_add["deal_id"], 
@@ -1140,7 +1142,7 @@ class MSGraphClient:
                     data_to_add["deal_stage"],
                     data_to_add["deal_owner"],
                     "",
-                    f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/{row_to_update}/", "update")',
+                    f'=HYPERLINK("{update_link}", "update")',
                     amount_parse,
                     data_to_add["last_contacted"],
                     data_to_add["last_contacted_type"],
@@ -1161,14 +1163,11 @@ class MSGraphClient:
                 "values": values
             }
 
-            
-            try:
-                result = self._make_request("PATCH", url, json_data=body)
-                logger.info(f"updated excel sheet row.")
-                return result
-            except:
-                logger.error(f"failed to update excel sheet row.")
-                return None
+
+            result = self._make_request("PATCH", url, json_data=body)
+            logger.info(f"updated excel sheet row.")
+            return result
+
 
         except requests.exceptions.HTTPError as e:
             logger.error(f"HTTP Error {e.response.status_code} - {e.response.text}")
@@ -1176,7 +1175,9 @@ class MSGraphClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error: {str(e)}")
             return f"Request error: {str(e)}"
-        
+        except Exception as e:
+            logger.exception("Unexpected error while updating Excel sheet")
+            return f"Unexpected error: {str(e)}"
 
 
     def delete_row_by_id(self, workbook_id: str, worksheet_name: str, id_column: str, id_value: Any) -> bool:
