@@ -16,8 +16,8 @@ def excel_note_to_hubspot(request, excel_row):
     ms_client = MSGraphClient(customer)
 
     note_value = ms_client.get_cell_value_by_header(
-        workbook_item_id="",
-        worksheet_id="",
+        workbook_item_id=feature.workbook_id,
+        worksheet_id=feature.worksheet_id,
         row_number = excel_row, 
         header_name = "j",
     )
