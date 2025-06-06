@@ -208,6 +208,23 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
         for deal_id, details in deal_parse.items():
             logger.info(f"Processing deal {deal_id}")
 
+            ms_client = MSGraphClient(customer)
+
+            is_existing_row = ms_client.find_row_by_id(
+                customerfeature.workbook_id, 
+                customerfeature.worksheet_id, 
+                "Record ID",
+                deal_id,
+            )
+
+            logger.info(f"is_existing_row: {is_existing_row}")
+
+            if is_existing_row:
+                row_to_update = is_existing_row
+            else: 
+                row_to_update = customerfeature.worksheet_last_row + 1
+
+
             data_to_add = {
                 "deal_id": deal_id,
                 "name": details.get('name', ''),
@@ -233,23 +250,7 @@ def process_deal_stage_change(customer: Customer, deal_id: str, payload: Dict[st
                 "call": details.get("call", ""),
             }
 
-            logger.info(f"built data: {data_to_add}")
-
-            ms_client = MSGraphClient(customer)
-
-            is_existing_row = ms_client.find_row_by_id(
-                customerfeature.workbook_id, 
-                customerfeature.worksheet_id, 
-                "Record ID",
-                deal_id,
-            )
-
-            logger.info(f"is_existing_row: {is_existing_row}")
-
-            if is_existing_row:
-                row_to_update = is_existing_row
-            else: 
-                row_to_update = customerfeature.worksheet_last_row + 1
+            logger.info(f"deal: {deal_id}, row: {row_to_update}")
 
             parse_row = ms_client.parse_deal_to_excel_sheet(
                 customerfeature.workbook_id, 
