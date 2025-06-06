@@ -594,6 +594,8 @@ class MSGraphClient:
         # Filter out None or empty values at the end
         while header_values and (header_values[-1] is None or header_values[-1] == ""):
             header_values.pop()
+
+        logger.info(f"{dir(header_values)}")
             
         logger.info(f"Retrieved {len(header_values)} headers from row {header_row}")
         return header_values
