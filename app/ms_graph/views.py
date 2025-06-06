@@ -19,10 +19,10 @@ def excel_note_to_hubspot(request, excel_row):
         workbook_item_id=feature.workbook_id,
         worksheet_id=feature.worksheet_id,
         row_number = excel_row, 
-        header_name = "j",
+        header_name = "J",
     )
 
-    logger.info(f"\n\n{note_value}\n\n")
+    logger.info(f"\n\nnote value: {note_value}\n\n")
 
     return HttpResponse(status=200)
     
