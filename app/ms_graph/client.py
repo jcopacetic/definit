@@ -1261,3 +1261,124 @@ class MSGraphClient:
         except Exception as e:
             logger.error(f"Error deleting deal '{deal_id}' from Excel sheet: {str(e)}")
             return False
+        
+
+    def get_row_contents(self, workbook_item_id: str, worksheet_id: str, row_number: int, drive_id: str = None) -> Optional[List[Any]]:
+        """
+        Get the contents of a specific row.
+        
+        Args:
+            workbook_item_id (str): The ID of the workbook item
+            worksheet_id (str): The ID or name of the worksheet
+            row_number (int): The 1-based row number to retrieve
+            drive_id (str, optional): The drive ID. Uses instance drive_id if not provided.
+            
+        Returns:
+            Optional[List[Any]]: The row values as a list if found, None otherwise
+        """
+        if not drive_id and not self.drive_id:
+            logger.error("Drive ID is required")
+            return None
+            
+        drive_id_to_use = drive_id or self.drive_id
+        
+        # First get the worksheet dimensions to determine the column range
+        dimensions = self.get_worksheet_dimensions(workbook_item_id, worksheet_id, drive_id)
+        if dimensions[1] == 0:  # No columns
+            logger.warning(f"No data found in worksheet")
+            return None
+            
+        # Get the entire row from A to the last column with data
+        last_column_letter = self._column_letter(dimensions[1])
+        range_address = f"A{row_number}:{last_column_letter}{row_number}"
+        
+        try:
+            result = self.get_range(workbook_item_id, worksheet_id, range_address, drive_id)
+            
+            if result and "values" in result and result["values"]:
+                row_values = result["values"][0]  # get_range returns 2D array, we want the first (and only) row
+                logger.info(f"Retrieved {len(row_values)} values from row {row_number}")
+                return row_values
+            else:
+                logger.warning(f"Row {row_number} appears to be empty or not found")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error retrieving row {row_number}: {str(e)}")
+            return None
+
+
+    def get_cell_value(self, workbook_item_id: str, worksheet_id: str, row_number: int, 
+                    column: Union[str, int], drive_id: str = None) -> Optional[Any]:
+        """
+        Get the value from a specific cell in a specific row.
+        
+        Args:
+            workbook_item_id (str): The ID of the workbook item
+            worksheet_id (str): The ID or name of the worksheet
+            row_number (int): The 1-based row number
+            column (Union[str, int]): The column letter (e.g., 'A') or 1-based column number (e.g., 1)
+            drive_id (str, optional): The drive ID. Uses instance drive_id if not provided.
+            
+        Returns:
+            Optional[Any]: The cell value if found, None otherwise
+        """
+        if not drive_id and not self.drive_id:
+            logger.error("Drive ID is required")
+            return None
+            
+        drive_id_to_use = drive_id or self.drive_id
+        
+        # Convert column number to letter if needed
+        if isinstance(column, int):
+            if column <= 0:
+                logger.error("Column number must be positive (1-based)")
+                return None
+            column_letter = self._column_letter(column)
+        else:
+            column_letter = column.upper()
+            
+        # Create cell address
+        cell_address = f"{column_letter}{row_number}"
+        
+        try:
+            result = self.get_range(workbook_item_id, worksheet_id, cell_address, drive_id_to_use)
+            
+            if result and "values" in result and result["values"]:
+                cell_value = result["values"][0][0] if result["values"][0] else None
+                logger.info(f"Retrieved value from cell {cell_address}: {cell_value}")
+                return cell_value
+            else:
+                logger.warning(f"Cell {cell_address} appears to be empty or not found")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error retrieving cell {cell_address}: {str(e)}")
+            return None
+
+
+    def get_cell_value_by_header(self, workbook_item_id: str, worksheet_id: str, row_number: int,
+                            header_name: str, header_row: int = 1, drive_id: str = None) -> Optional[Any]:
+        """
+        Get the value from a specific cell in a specific row using column header name.
+        
+        Args:
+            workbook_item_id (str): The ID of the workbook item
+            worksheet_id (str): The ID or name of the worksheet
+            row_number (int): The 1-based row number
+            header_name (str): The header name to find the column
+            header_row (int, optional): The row containing headers (1-based). Default is 1.
+            drive_id (str, optional): The drive ID. Uses instance drive_id if not provided.
+            
+        Returns:
+            Optional[Any]: The cell value if found, None otherwise
+        """
+        # Find the column letter by header name
+        column_letter = self.get_column_letter_by_header(workbook_item_id, worksheet_id, header_name, header_row, drive_id)
+        
+        if not column_letter:
+            logger.warning(f"Header '{header_name}' not found")
+            return None
+            
+        # Get the cell value using the found column letter
+        return self.get_cell_value(workbook_item_id, worksheet_id, row_number, column_letter, drive_id)
