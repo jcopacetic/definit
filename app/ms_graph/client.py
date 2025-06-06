@@ -1118,6 +1118,8 @@ class MSGraphClient:
             data_to_add, 
             row_to_update,
         ):
+
+        logger.info(f"row being updated: {row_to_update}")
         
         try:
             amount_parse = (
