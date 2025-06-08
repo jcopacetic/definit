@@ -1128,8 +1128,8 @@ class MSGraphClient:
                 else data_to_add.get("deal_amount", "")
             )
 
-            update_link = f'https://integration00.definit.com/excel/excel-note-to-hubspot/{row_to_update}/'
-
+            update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/" & ROW() & "/", "update")'
+            
             values = [
                 [
                     data_to_add["deal_id"], 
@@ -1142,7 +1142,7 @@ class MSGraphClient:
                     data_to_add["deal_stage"],
                     data_to_add["deal_owner"],
                     "",
-                    f'=HYPERLINK("{update_link}", "update")',
+                    update_link_formula,
                     amount_parse,
                     data_to_add["last_contacted"],
                     data_to_add["last_contacted_type"],
