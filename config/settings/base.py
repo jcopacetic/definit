@@ -379,3 +379,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+SECRET_KEY = env("SECRET_KEY", default="")
+EXCEL_SIGNATURE_SECRET = env("EXCEL_SIGNATURE_SECRET", default=SECRET_KEY)

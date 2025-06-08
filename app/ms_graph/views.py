@@ -1,8 +1,10 @@
 import logging
+from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, Http404
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import Template, Context
+from itsdangerous import TimestampSigner, BadSignature, SignatureExpired
 
 from app.dashboard.models import Customer 
 from app.ms_graph.client import MSGraphClient 
@@ -14,104 +16,89 @@ logger = logging.getLogger(__name__)
 def excel_note_to_hubspot(request, excel_row):
     """
     Process Excel note submission to HubSpot.
-    
     Args:
         request: Django HTTP request object
         excel_row: Row number in Excel worksheet
-        
     Returns:
         HttpResponse: HTML response with auto-close script
     """
     try:
-        # Validate input parameters
+        # Validate and sign input parameters
         if not excel_row or not str(excel_row).isdigit():
             logger.error(f"Invalid excel_row parameter: {excel_row}")
             return _render_error_response("Invalid row number provided")
-        
+
         excel_row = int(excel_row)
         if excel_row < 1:
             logger.error(f"Excel row must be positive: {excel_row}")
             return _render_error_response("Row number must be positive")
-            
+
         logger.info(f"Processing Excel note to HubSpot for row {excel_row}")
-        
-        # Get customer and feature with proper error handling
+
         customer, feature = _get_customer_and_feature()
         if not customer or not feature:
             return _render_error_response("Customer or feature configuration not found")
-        
+
         logger.info(f"Using customer: {customer.id}, feature: {feature.id}")
-        
-        # Initialize MS Graph client
+
         try:
             ms_client = MSGraphClient(customer)
         except Exception as e:
             logger.error(f"Failed to initialize MS Graph client: {str(e)}")
             return _render_error_response("Failed to connect to Microsoft Graph")
-        
-        # Get note value from Excel
-        note_value = _get_excel_cell_value(
-            ms_client, feature, excel_row, "Submit a Note"
-        )
-        
+
+        note_value = _get_excel_cell_value(ms_client, feature, excel_row, "Submit a Note")
         if not note_value:
             logger.info(f"No note value found in row {excel_row}")
             return _render_success_response("No note to submit")
-        
+
         logger.info(f"Retrieved note value from Excel (length: {len(note_value)})")
-        
-        # Get deal ID from Excel
-        deal_id = _get_excel_cell_value(
-            ms_client, feature, excel_row, "Record ID"
-        )
-        
+
+        deal_id = _get_excel_cell_value(ms_client, feature, excel_row, "Record ID")
         if not deal_id:
             logger.warning(f"No deal ID found in row {excel_row}")
             return _render_error_response("Deal ID not found in Excel row")
-        
+
         logger.info(f"Processing deal ID: {deal_id}")
-        
-        # Create note in HubSpot
+
         success = _create_hubspot_note(customer, deal_id, note_value)
         if not success:
             return _render_error_response("Failed to create note in HubSpot")
-        
-        # Clear the Excel cell after successful submission
+
         _clear_excel_cell(ms_client, feature, excel_row)
-        
+
         logger.info(f"Successfully processed note for deal {deal_id}")
         return _render_success_response("Note submitted successfully")
-        
+
     except Exception as e:
         logger.error(f"Unexpected error in excel_note_to_hubspot: {str(e)}", exc_info=True)
         return _render_error_response("An unexpected error occurred")
 
 
+def _get_signer():
+    """Return a TimestampSigner with project-level secret."""
+    secret = getattr(settings, "EXCEL_SIGNATURE_SECRET", settings.SECRET_KEY)
+    return TimestampSigner(secret)
+
+
 def _get_customer_and_feature():
-    """
-    Retrieve customer and associated feature.
-    
-    Returns:
-        tuple: (customer, feature) or (None, None) if not found
-    """
     try:
         customer = Customer.objects.first()
         if not customer:
             logger.error("No customer found in database")
             return None, None
-        
+
         feature = customer.features.first()
         if not feature:
             logger.error(f"No features found for customer {customer.id}")
             return None, None
-            
-        # Validate required feature attributes
+
         if not all([feature.workbook_id, feature.worksheet_id]):
             logger.error(f"Feature {feature.id} missing required workbook/worksheet IDs")
             return None, None
-            
+
         return customer, feature
-        
+
     except ObjectDoesNotExist as e:
         logger.error(f"Database error retrieving customer/feature: {str(e)}")
         return None, None
@@ -121,18 +108,6 @@ def _get_customer_and_feature():
 
 
 def _get_excel_cell_value(ms_client, feature, row_number, header_name):
-    """
-    Safely retrieve cell value from Excel worksheet.
-    
-    Args:
-        ms_client: MS Graph client instance
-        feature: Feature model instance
-        row_number: Excel row number
-        header_name: Column header name
-        
-    Returns:
-        str: Cell value or None if not found/error
-    """
     try:
         value = ms_client.get_cell_value_by_header(
             workbook_item_id=feature.workbook_id,
@@ -140,13 +115,10 @@ def _get_excel_cell_value(ms_client, feature, row_number, header_name):
             row_number=row_number,
             header_name=header_name,
         )
-        
-        # Clean and validate the value
         if value:
-            value = str(value).strip()
-            return value if value else None
+            return str(value).strip() or None
         return None
-        
+
     except Exception as e:
         logger.error(
             f"Error retrieving Excel cell value (row: {row_number}, "
@@ -156,63 +128,42 @@ def _get_excel_cell_value(ms_client, feature, row_number, header_name):
 
 
 def _create_hubspot_note(customer, deal_id, note_value):
-    """
-    Create a note in HubSpot for the specified deal.
-    
-    Args:
-        customer: Customer model instance
-        deal_id: HubSpot deal ID
-        note_value: Note content
-        
-    Returns:
-        bool: True if successful, False otherwise
-    """
     try:
         if not customer.hubspot_secret_app_key:
             logger.error(f"Customer {customer.id} missing HubSpot API key")
             return False
-            
+
         hs_client = HubSpotClient(customer.hubspot_secret_app_key)
         created_note = hs_client.create_note_on_deal(deal_id, note_value)
-        
+
         if created_note:
             logger.info(f"Successfully created HubSpot note for deal {deal_id}")
             return True
         else:
             logger.error(f"Failed to create HubSpot note for deal {deal_id}")
             return False
-            
+
     except Exception as e:
         logger.error(f"Error creating HubSpot note for deal {deal_id}: {str(e)}")
         return False
 
 
 def _clear_excel_cell(ms_client, feature, excel_row):
-    """
-    Clear the Excel cell after successful note submission.
-    
-    Args:
-        ms_client: MS Graph client instance
-        feature: Feature model instance
-        excel_row: Excel row number
-    """
     try:
-        cell_address = f"J{excel_row}"  # Assuming column J for "Submit a Note"
+        cell_address = f"J{excel_row}"
         cell_update = ms_client.update_cell(
             feature.workbook_id,
             feature.worksheet_id,
             cell_address,
             "",
         )
-        
         if cell_update:
             logger.info(f"Successfully cleared Excel cell {cell_address}")
         else:
             logger.warning(f"Failed to clear Excel cell {cell_address}")
-            
+
     except Exception as e:
         logger.error(f"Error clearing Excel cell J{excel_row}: {str(e)}")
-        # Don't fail the entire operation if cell clearing fails
 
 
 def _render_success_response(message="Operation completed successfully"):
