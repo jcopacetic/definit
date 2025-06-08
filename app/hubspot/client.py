@@ -442,7 +442,7 @@ class HubSpotClient:
                     "types": [
                         {
                             "associationCategory": "HUBSPOT_DEFINED",
-                            "associationTypeId": 202,
+                            "associationTypeId": 214,
                         }
                     ]
                 }
