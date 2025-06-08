@@ -32,6 +32,8 @@ def excel_note_to_hubspot(request, excel_row):
             header_name = "Record ID",
         )
 
+        logger.info(f"\n\nrecord ID: {deal_id}\n\n")
+
         if deal_id:
             hs_client = HubSpotClient(customer.hubspot_secret_app_key)
 
@@ -45,9 +47,9 @@ def excel_note_to_hubspot(request, excel_row):
                     "",
                 )
 
-                print(f"cell update: {cell_update}")
+                logger.info(f"cell update: {cell_update}")
 
-    logger.info(f"\n\nrecord ID: {deal_id}\n\n")
+    
 
     return HttpResponse(status=200)
     
