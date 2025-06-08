@@ -1,6 +1,7 @@
 import requests
 import logging 
 import json
+import time
 import re
 from datetime import datetime
 
@@ -447,7 +448,8 @@ class HubSpotClient:
                 }
             ],
             "properties": {
-                "hs_note_body": note_text
+                "hs_note_body": note_text,
+                "hs_timestamp": int(time.time() * 1000),
             }
         }
 
