@@ -431,6 +431,28 @@ class HubSpotClient:
         
         return self._make_request(url, "POST", body=body)
     
+    def create_note_on_deal(self, deal_id, note_text):
+        body = {
+            "associations": [
+                {
+                    "to": {
+                        "id": deal_id,
+                    },
+                    "types": [
+                        {
+                            "associationCategory": "HUBSPOT_DEFINED",
+                            "associationTypeId": 202,
+                        }
+                    ]
+                }
+            ],
+            "properties": {
+                "hs_note_body": note_text
+            }
+        }
+
+        return self._make_request(self.NOTES_PATH, "POST", body=body)
+    
     def update_deal(self, deal_id, properties):
         """Update properties of a deal"""
         url = f"{self.DEALS_PATH}/{deal_id}"
