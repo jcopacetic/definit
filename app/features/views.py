@@ -55,26 +55,18 @@ def hubspot_signature_required(f):
 def validate_hubspot_signature(request, customer: Customer) -> None:
     """
     Validates a HubSpot webhook request using the v3 signature scheme.
-
-    Args:
-        request: The Django HTTP request.
-        customer: The customer instance with a HubSpot private app key.
-
-    Raises:
-        WebhookValidationError: If validation fails at any point.
     """
     signature_header = request.headers.get("X-HubSpot-Signature-v3")
-    logger.info(f"signature header: {signature_header}")
     if not signature_header:
         logger.warning("Missing HubSpot signature header")
         raise WebhookValidationError("Missing HubSpot signature header")
 
     timestamp = request.headers.get("X-HubSpot-Request-Timestamp")
-    logger.info(f"timestamp: {timestamp}")
     if not timestamp:
         logger.warning("Missing HubSpot timestamp header")
         raise WebhookValidationError("Missing HubSpot timestamp header")
 
+    # Validate timestamp format and age
     try:
         current_time = int(time.time() * 1000)
         request_time = int(timestamp)
@@ -87,39 +79,86 @@ def validate_hubspot_signature(request, customer: Customer) -> None:
         logger.warning(f"Request expired. Current time: {current_time}, request time: {request_time}")
         raise WebhookValidationError("Request expired - timestamp too old")
 
+    # Get the secret
     secret = customer.hubspot_client_secret
-    logger.info(f"secret: {secret}")
     if not secret:
         logger.critical(f"Customer {customer.id} missing HubSpot secret key")
         raise WebhookValidationError("HubSpot secret not configured for customer", 500)
 
     try:
+        # Build the source string exactly as HubSpot does
         method = request.method.upper()
+        
+        # Important: Use the exact host and path as received
         host = request.get_host()
-        raw_query = request.META.get("QUERY_STRING", "")
-        uri = f"https://{host}{request.path}"
-        if raw_query:
-            uri += f"?{raw_query}"
-
-        body = request.body or b""
-        signature_base = method.encode("utf-8") + \
-                         uri.encode("utf-8") + \
-                         body + \
-                         timestamp.encode("utf-8")
-
-        calculated = hmac.new(
-            key=secret.encode("utf-8"),
-            msg=signature_base,
+        path = request.get_full_path()  # This includes query parameters
+        uri = f"https://{host}{path}"
+        
+        # Get raw body - this is critical
+        body = getattr(request, '_body', None) or request.body
+        if hasattr(request, '_body'):
+            # If body was already read, use the cached version
+            body = request._body
+        else:
+            # Read and cache the body for potential future use
+            body = request.body
+            request._body = body
+        
+        # Build signature source string in exact order
+        source_string = (
+            method.encode('utf-8') +
+            uri.encode('utf-8') +
+            body +
+            timestamp.encode('utf-8')
+        )
+        
+        logger.debug(f"Signature source string components:")
+        logger.debug(f"  Method: {method}")
+        logger.debug(f"  URI: {uri}")
+        logger.debug(f"  Body length: {len(body)}")
+        logger.debug(f"  Timestamp: {timestamp}")
+        
+        # Calculate signature
+        calculated_signature = hmac.new(
+            key=secret.encode('utf-8'),
+            msg=source_string,
             digestmod=hashlib.sha256
         ).digest()
-        calculated_b64 = base64.b64encode(calculated).decode("utf-8")
+        
+        calculated_b64 = base64.b64encode(calculated_signature).decode('utf-8')
+        
+        logger.debug(f"Expected signature: {signature_header}")
+        logger.debug(f"Calculated signature: {calculated_b64}")
+        
     except Exception as e:
         logger.exception("Error during signature calculation")
         raise WebhookValidationError("Error calculating signature", 500)
 
+    # Compare signatures using constant-time comparison
     if not hmac.compare_digest(calculated_b64, signature_header):
         logger.warning("Signature mismatch during HubSpot validation")
+        logger.warning(f"Expected: {signature_header}")
+        logger.warning(f"Calculated: {calculated_b64}")
         raise WebhookValidationError("Invalid HubSpot signature")
+
+    logger.info("HubSpot signature validation successful")
+
+
+# Alternative middleware approach to preserve request body
+class PreserveRequestBodyMiddleware:
+    """
+    Middleware to preserve request body for signature validation
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Store the raw body before it's consumed
+        if request.content_type == 'application/json':
+            request._body = request.body
+        
+        response = self.get_response(request)
+        return response
 
 
 
@@ -346,26 +385,26 @@ def remove_deal_from_sheet(customer, object_id):
 @require_POST
 def hubspot_to_msgraph_webhook_listener(request):
     """
-    Webhook listener for HubSpot events, particularly deal stage changes.
-    Processes the webhook payload and updates Excel via MS Graph when appropriate.
-
-    Returns:
-        HttpResponse: Appropriate response based on processing result
+    Webhook listener for HubSpot events with improved body handling.
     """
     request_id = f"req_{int(time.time() * 1000)}"
     logger.info(f"[{request_id}] Received HubSpot webhook request")
 
-    # --- Step 1: Parse JSON body ---
+    # 1. Preserve the raw body for signature validation
+    if not hasattr(request, '_body'):
+        request._body = request.body
+
+    # 2. Parse JSON body (using cached body if available)
     try:
-        body_bytes = request.body
+        body_bytes = getattr(request, '_body', request.body)
         body_str = body_bytes.decode('utf-8')
         body = json.loads(body_str)
-        logger.info(f"[{request_id}] Request body:\n{json.dumps(body, indent=2)}")
+        logger.info(f"[{request_id}] Request body parsed successfully")
     except Exception as e:
         logger.warning(f"[{request_id}] Failed to parse request body: {e}")
         return JsonResponse({"error": "Invalid JSON payload"}, status=400)
 
-    # --- Step 2: Extract portalId and objectId ---
+    # Extract portalId and objectId
     try:
         if isinstance(body, list) and body:
             data = body[0]
@@ -378,34 +417,29 @@ def hubspot_to_msgraph_webhook_listener(request):
         object_id = data.get("objectId")
 
         if not portal_id:
-            logger.warning(f"[{request_id}] Missing portalId in request")
             return JsonResponse({"error": "Missing portalId"}, status=400)
-
         if not object_id:
-            logger.warning(f"[{request_id}] Missing objectId in request")
             return JsonResponse({"error": "Missing objectId"}, status=400)
 
-        logger.info(f"[{request_id}] Extracted portalId: {portal_id}, objectId: {object_id}")
-
     except Exception as e:
-        logger.error(f"[{request_id}] Failed to extract portalId or objectId: {e}")
+        logger.error(f"[{request_id}] Failed to extract required fields: {e}")
         return JsonResponse({"error": "Malformed request body"}, status=400)
 
-    # --- Step 3: Customer lookup ---
+    # 3. Customer lookup
     try:
         customer = get_customer_from_portal_id(portal_id)
-        logger.info(f"[{request_id}] Found customer {customer.id} for portal {portal_id}")
+        logger.info(f"[{request_id}] Found customer {customer.id}")
     except Exception as e:
         logger.error(f"[{request_id}] Customer lookup failed: {e}")
         return JsonResponse({"error": f"Customer lookup failed: {str(e)}"}, status=400)
 
-    # # --- Step 4: Validate HubSpot signature ---
-    # try:
-    #     validate_hubspot_signature(request, customer)
-    #     logger.debug(f"[{request_id}] HubSpot signature validation successful")
-    # except WebhookValidationError as e:
-    #     logger.warning(f"[{request_id}] Webhook signature validation failed: {e.message}")
-    #     return HttpResponseForbidden(e.message)
+    # 4. Validate signature AFTER we have customer but BEFORE processing
+    try:
+        validate_hubspot_signature(request, customer)
+        logger.debug(f"[{request_id}] Signature validation successful")
+    except WebhookValidationError as e:
+        logger.warning(f"[{request_id}] Signature validation failed: {e.message}")
+        return HttpResponseForbidden(e.message)
 
     # --- Step 5: Parse payload ---
     request_id = f"req_{int(time.time() * 1000)}"  # Example request ID, adjust as needed
