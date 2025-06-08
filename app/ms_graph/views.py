@@ -22,7 +22,14 @@ def excel_note_to_hubspot(request, excel_row):
         header_name = "Submit a Note",
     )
 
-    logger.info(f"\n\nnote value: {note_value}\n\n")
+    deal_id = ms_client.get_cell_value_by_header(
+        workbook_item_id=feature.workbook_id,
+        worksheet_id=feature.worksheet_id,
+        row_number = excel_row, 
+        header_name = "Record ID",
+    )
+
+    logger.info(f"\n\nrecord ID: {deal_id}\n\n")
 
     return HttpResponse(status=200)
     
