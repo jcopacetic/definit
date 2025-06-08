@@ -1,11 +1,12 @@
-
-            
 import os
 import logging
 import requests
 import msal
 import urllib.parse
+import itsdangerous
 from typing import Dict, List, Union, Optional, Any, Tuple
+
+from django.conf import settings
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -1111,6 +1112,11 @@ class MSGraphClient:
             return None
    
 
+    def _generate_signed_url(self, row_number: int, secret_key: str):
+        signer = itsdangerous.TimestampSigner(secret_key)
+        signed_value = signer.sign(str(row_number))
+        return f"https://integration00.definit.com/excel/excel-note-to-hubspot/{signed_value.decode()}/"
+
     def parse_deal_to_excel_sheet(
             self,
             workbook_id, 
@@ -1128,7 +1134,10 @@ class MSGraphClient:
                 else data_to_add.get("deal_amount", "")
             )
 
-            update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/" & ROW() & "/", "update")'
+            # update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/" & ROW() & "/", "update")'
+            signed_url = self._generate_signed_url(row_to_update, settings.SECRET_KEY)
+            update_link_formula = f'=HYPERLINK("{signed_url}", "update")'
+
             
             values = [
                 [
