@@ -13,39 +13,39 @@ from app.hubspot.client import HubSpotClient
 logger = logging.getLogger(__name__)
 
 
-def excel_note_to_hubspot(request, excel_row):
+def excel_note_to_hubspot(request, signed_row):
     """
     Process Excel note submission to HubSpot.
     Args:
         request: Django HTTP request object
-        excel_row: Row number in Excel worksheet
+        signed_row: Signed row number string
     Returns:
         HttpResponse: HTML response with auto-close script
     """
-    try:
-        # Validate and sign input parameters
-        if not excel_row or not str(excel_row).isdigit():
-            logger.error(f"Invalid excel_row parameter: {excel_row}")
-            return _render_error_response("Invalid row number provided")
 
-        excel_row = int(excel_row)
+    customer, feature = _get_customer_and_feature()
+    if not customer or not feature:
+        return _render_error_response("Customer or feature configuration not found")
+    logger.info(f"Using customer: {customer.id}, feature: {feature.id}")
+
+    try:
+        ms_client = MSGraphClient(customer)
+    except Exception as e:
+        logger.error(f"Failed to initialize MS Graph client: {str(e)}")
+        return _render_error_response("Failed to connect to Microsoft Graph")
+    try:
+        # Verify the signature and extract the row number
+        excel_row = ms_client._verify_signed_row(signed_row, settings.SECRET_KEY)
+        
+        if excel_row is None:
+            logger.error(f"Invalid or expired signature: {signed_row}")
+            return _render_error_response("Invalid or expired link")
+
         if excel_row < 1:
             logger.error(f"Excel row must be positive: {excel_row}")
             return _render_error_response("Row number must be positive")
 
-        logger.info(f"Processing Excel note to HubSpot for row {excel_row}")
-
-        customer, feature = _get_customer_and_feature()
-        if not customer or not feature:
-            return _render_error_response("Customer or feature configuration not found")
-
-        logger.info(f"Using customer: {customer.id}, feature: {feature.id}")
-
-        try:
-            ms_client = MSGraphClient(customer)
-        except Exception as e:
-            logger.error(f"Failed to initialize MS Graph client: {str(e)}")
-            return _render_error_response("Failed to connect to Microsoft Graph")
+        logger.info(f"Processing Excel note to HubSpot for verified row {excel_row}")
 
         note_value = _get_excel_cell_value(ms_client, feature, excel_row, "Submit a Note")
         if not note_value:
@@ -73,7 +73,7 @@ def excel_note_to_hubspot(request, excel_row):
     except Exception as e:
         logger.error(f"Unexpected error in excel_note_to_hubspot: {str(e)}", exc_info=True)
         return _render_error_response("An unexpected error occurred")
-
+    
 
 def _get_signer():
     """Return a TimestampSigner with project-level secret."""
