@@ -1156,8 +1156,9 @@ class MSGraphClient:
             )
 
             # Generate signed URL
-            signed_url = self._generate_signed_url(row_to_update, settings.SECRET_KEY)
-            update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/{row_to_update}/", "update")'
+            # signed_url = self._generate_signed_url(row_to_update, settings.SECRET_KEY)
+            # update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/{row_to_update}/", "update")'
+            update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/" & ROW() & "/", "update")'
 
             values = [
                 [
