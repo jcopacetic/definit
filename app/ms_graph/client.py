@@ -1113,10 +1113,32 @@ class MSGraphClient:
    
 
     def _generate_signed_url(self, row_number: int, secret_key: str):
+        """Generate a signed URL for the Excel row"""
         signer = itsdangerous.TimestampSigner(secret_key)
         signed_value = signer.sign(str(row_number))
-        return f"https://integration00.definit.com/excel/excel-note-to-hubspot/{signed_value.decode()}/"
-
+        
+        # Remove .decode() as sign() returns a string
+        # URL encode the signed value to handle special characters
+        from urllib.parse import quote
+        encoded_signed_value = quote(signed_value, safe='')
+        
+        return f"https://integration00.definit.com/excel/excel-note-to-hubspot/{encoded_signed_value}/"
+    
+    def _verify_signed_row(self, signed_value: str, secret_key: str, max_age: int = 3600):
+        """Verify and extract row number from signed value"""
+        try:
+            from urllib.parse import unquote
+            # URL decode first
+            decoded_value = unquote(signed_value)
+            
+            signer = itsdangerous.TimestampSigner(secret_key)
+            # Verify signature and get original value (with timestamp check)
+            original_value = signer.unsign(decoded_value, max_age=max_age)
+            return int(original_value)
+        except (itsdangerous.BadSignature, itsdangerous.SignatureExpired, ValueError) as e:
+            logger.error(f"Failed to verify signed row: {e}")
+            return None
+        
     def parse_deal_to_excel_sheet(
             self,
             workbook_id, 
@@ -1124,7 +1146,6 @@ class MSGraphClient:
             data_to_add, 
             row_to_update,
         ):
-
         logger.info(f"row being updated: {row_to_update}")
         
         try:
@@ -1134,11 +1155,10 @@ class MSGraphClient:
                 else data_to_add.get("deal_amount", "")
             )
 
-            # update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/" & ROW() & "/", "update")'
+            # Generate signed URL
             signed_url = self._generate_signed_url(row_to_update, settings.SECRET_KEY)
             update_link_formula = f'=HYPERLINK("{signed_url}", "update")'
 
-            
             values = [
                 [
                     data_to_add["deal_id"], 
@@ -1166,24 +1186,13 @@ class MSGraphClient:
             ]
 
             target_range = f"A{row_to_update}:U{row_to_update}"
-
             url = f"{self.items_path}/{workbook_id}/workbook/worksheets/{worksheet_name}/range(address='{target_range}')"
-            body = {
-                "values": values
-            }
-
+            body = {"values": values}
 
             result = self._make_request("PATCH", url, json_data=body)
             logger.info(f"updated excel sheet row.")
             return result
 
-
-        except requests.exceptions.HTTPError as e:
-            logger.error(f"HTTP Error {e.response.status_code} - {e.response.text}")
-            return f"HTTP Error {e.response.status_code}"
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request error: {str(e)}")
-            return f"Request error: {str(e)}"
         except Exception as e:
             logger.exception("Unexpected error while updating Excel sheet")
             return f"Unexpected error: {str(e)}"
