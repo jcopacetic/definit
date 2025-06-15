@@ -34,18 +34,20 @@ def excel_note_to_hubspot(request, signed_row):
         logger.error(f"Failed to initialize MS Graph client: {str(e)}")
         return _render_error_response("Failed to connect to Microsoft Graph")
     try:
-        # Verify the signature and extract the row number
-        excel_row = ms_client._verify_signed_row(signed_row, settings.SECRET_KEY)
+        # # Verify the signature and extract the row number
+        # excel_row = ms_client._verify_signed_row(signed_row, settings.SECRET_KEY)
         
-        if excel_row is None:
-            logger.error(f"Invalid or expired signature: {signed_row}")
-            return _render_error_response("Invalid or expired link")
+        # if excel_row is None:
+        #     logger.error(f"Invalid or expired signature: {signed_row}")
+        #     return _render_error_response("Invalid or expired link")
 
-        if excel_row < 1:
-            logger.error(f"Excel row must be positive: {excel_row}")
-            return _render_error_response("Row number must be positive")
+        # if excel_row < 1:
+        #     logger.error(f"Excel row must be positive: {excel_row}")
+        #     return _render_error_response("Row number must be positive")
 
-        logger.info(f"Processing Excel note to HubSpot for verified row {excel_row}")
+        # logger.info(f"Processing Excel note to HubSpot for verified row {excel_row}")
+
+        excel_row = signed_row
 
         note_value = _get_excel_cell_value(ms_client, feature, excel_row, "Submit a Note")
         if not note_value:
