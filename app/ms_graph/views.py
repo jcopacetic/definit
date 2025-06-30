@@ -77,6 +77,8 @@ def excel_note_to_hubspot(request, signed_row):
             "note": note_value,
         }
 
+        print(deal_info)
+
 
         logger.info(f"Successfully processed note for deal {deal_id}")
         return _render_success_response(deal_info, "Note submitted successfully")
@@ -199,10 +201,10 @@ def _render_success_response(deal_info, message="Operation completed successfull
           <h2 style="color: green;">✓ Success</h2>
           <p>{{ message }}</p>
           <br>
-          <p><strong>Row ID</strong> {{deal_info["row_id"]}}<br>
-          <strong>Deal ID</strong> {{deal_info["deal_id"]}}<br>
-          <strong>Deal Name</strong> {{deal_info["deal_name"]}}<br>
-          <strong>Note</strong> {{deal_info["note"]}}</p>
+          <p><strong>Row ID</strong> {{deal_info.get("row_id", "")}}<br>
+          <strong>Deal ID</strong> {{deal_info.get("deal_id", "")}}<br>
+          <strong>Deal Name</strong> {{deal_info.get("deal_name", "")}}<br>
+          <strong>Note</strong> {{deal_info.get("note", "")}}</p>
           <br>
           <p><small>This window will close automatically...</small></p>
         </div>
