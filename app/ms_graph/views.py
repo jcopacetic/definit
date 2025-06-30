@@ -57,7 +57,7 @@ def excel_note_to_hubspot(request, signed_row):
         logger.info(f"Retrieved note value from Excel (length: {len(note_value)})")
 
         deal_id = _get_excel_cell_value(ms_client, feature, excel_row, "Record ID")
-        deal_name = deal_id = _get_excel_cell_value(ms_client, feature, excel_row, "Deal_name")
+        deal_name = deal_id = _get_excel_cell_value(ms_client, feature, excel_row, "Deal Name")
         if not deal_id:
             logger.warning(f"No deal ID found in row {excel_row}")
             return _render_error_response("Deal ID not found in Excel row")
