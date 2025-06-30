@@ -201,22 +201,21 @@ def _render_success_response(deal_info, message="Operation completed successfull
           <h2 style="color: green;">✓ Success</h2>
           <p>{{ message }}</p>
           <br>
-          <p><strong>Row ID</strong> {{deal_info.get("row_id", "")}}<br>
-          <strong>Deal ID</strong> {{deal_info.get("deal_id", "")}}<br>
-          <strong>Deal Name</strong> {{deal_info.get("deal_name", "")}}<br>
-          <strong>Note</strong> {{deal_info.get("note", "")}}</p>
+          <p><strong>Row ID</strong> {{ deal_info.row_id|default:"" }}<br>
+          <strong>Deal ID</strong> {{ deal_info.deal_id|default:"" }}<br>
+          <strong>Deal Name</strong> {{ deal_info.deal_name|default:"" }}<br>
+          <strong>Note</strong> {{ deal_info.note|default:"" }}</p>
           <br>
           <p><small>This window will close automatically...</small></p>
         </div>
         <script>
-         /* setTimeout(() => {
+          setTimeout(() => {
             try {
               window.close();
             } catch (e) {
-              // Fallback if window.close() is blocked
               document.body.innerHTML = '<div style="text-align: center; padding: 20px;"><h3>Please close this window</h3></div>';
             }
-          }, 2000); */
+          }, 2000);
         </script>
       </body>
     </html>
