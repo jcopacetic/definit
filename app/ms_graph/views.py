@@ -57,6 +57,7 @@ def excel_note_to_hubspot(request, signed_row):
         logger.info(f"Retrieved note value from Excel (length: {len(note_value)})")
 
         deal_id = _get_excel_cell_value(ms_client, feature, excel_row, "Record ID")
+        deal_name = deal_id = _get_excel_cell_value(ms_client, feature, excel_row, "Deal_name")
         if not deal_id:
             logger.warning(f"No deal ID found in row {excel_row}")
             return _render_error_response("Deal ID not found in Excel row")
@@ -69,8 +70,16 @@ def excel_note_to_hubspot(request, signed_row):
 
         _clear_excel_cell(ms_client, feature, excel_row)
 
+        deal_info = {
+            "row_id": excel_row,
+            "deal_name": deal_name,
+            "deal_id": deal_id,
+            "note": note_value,
+        }
+
+
         logger.info(f"Successfully processed note for deal {deal_id}")
-        return _render_success_response("Note submitted successfully")
+        return _render_success_response(deal_info, "Note submitted successfully")
 
     except Exception as e:
         logger.error(f"Unexpected error in excel_note_to_hubspot: {str(e)}", exc_info=True)
@@ -168,7 +177,7 @@ def _clear_excel_cell(ms_client, feature, excel_row):
         logger.error(f"Error clearing Excel cell J{excel_row}: {str(e)}")
 
 
-def _render_success_response(message="Operation completed successfully"):
+def _render_success_response(deal_info, message="Operation completed successfully"):
     """
     Render success response with auto-close script.
     
@@ -189,17 +198,23 @@ def _render_success_response(message="Operation completed successfully"):
         <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
           <h2 style="color: green;">✓ Success</h2>
           <p>{{ message }}</p>
+          <br>
+          <p><strong>Row ID</strong> {{deal_info["row_id"]}}<br>
+          <strong>Deal ID</strong> {{deal_info["deal_id"]}}<br>
+          <strong>Deal Name</strong> {{deal_info["deal_name"]}}<br>
+          <strong>Note</strong> {{deal_info["note"]}}</p>
+          <br>
           <p><small>This window will close automatically...</small></p>
         </div>
         <script>
-          setTimeout(() => {
+         /* setTimeout(() => {
             try {
               window.close();
             } catch (e) {
               // Fallback if window.close() is blocked
               document.body.innerHTML = '<div style="text-align: center; padding: 20px;"><h3>Please close this window</h3></div>';
             }
-          }, 2000);
+          }, 2000); */
         </script>
       </body>
     </html>
