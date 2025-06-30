@@ -11,3 +11,28 @@
     {% endif %}
   </p>
 {% endblock content %}
+
+
+<script>
+function logAllQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  if (![...params].length) {
+    console.log('No query parameters found.');
+    return;
+  }
+
+  console.log('Query Parameters:');
+  for (const [key, value] of params.entries()) {
+    console.log(`${key}: ${value}`);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("form");
+  console.log(form);
+
+  logAllQueryParams();
+
+});
+
+</script>
