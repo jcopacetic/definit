@@ -223,7 +223,7 @@ def _render_success_response(deal_info, message="Operation completed successfull
     """
     
     template = Template(template_content)
-    context = Context({'message': message})
+    context = Context({'deal_info': deal_info or {}, 'message': message})
     return HttpResponse(template.render(context))
 
 
