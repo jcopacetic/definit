@@ -100,12 +100,9 @@ def excel_note_to_hubspot(request, signed_row):
             "deal_name": deal_name,
             "deal_id": deal_id,
             "note": note_value,
-            "last_saved": workbook_last_save_stamp,
-            "submitted": current_time_stamp,
+            "last_saved": workbook_last_save_stamp.strftime("%Y-%m-%d %H:%M:%S.") + f"{int(workbook_last_save_stamp.microsecond / 1000):03d}",
+            "submitted": current_time_stamp.strftime("%Y-%m-%d %H:%M:%S.") + f"{int(current_time_stamp.microsecond / 1000):03d}",
         }
-
-        print(deal_info)
-
 
         logger.info(f"Successfully processed note for deal {deal_id}")
         return _render_success_response(deal_info, "Note submitted successfully")
