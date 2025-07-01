@@ -1,7 +1,8 @@
 import logging
 import time
 
-from datetime import datetime 
+from datetime import datetime, timezone
+from dateutil import parser
 
 from django.conf import settings
 from django.shortcuts import render
@@ -51,16 +52,27 @@ def excel_note_to_hubspot(request, signed_row):
 
         # logger.info(f"Processing Excel note to HubSpot for verified row {excel_row}")
 
-        current_time_stamp = datetime.now()
+        
+        current_time_stamp = datetime.now(timezone.utc)
+
+        excel_row = signed_row
+
+        time.sleep(30)
 
         workbook_last_save_stamp = ms_client.get_worksheet_last_saved_timestamp(
             workbook_item_id=feature.workbook_id, 
             worksheet_name=feature.worksheet_name,
         )
 
-        excel_row = signed_row
+        if isinstance(workbook_last_save_stamp, str):
+            workbook_last_save_stamp = parser.isoparse(workbook_last_save_stamp)
+        logger.debug(f"Workbook last saved timestamp: {workbook_last_save_stamp.isoformat()}")
 
-        time.sleep(30)
+        # Parse submission time and make timezone-aware (assumed to be UTC)
+        submission_time = parser.parse(current_time_stamp)
+        if submission_time.tzinfo is None:
+            submission_time = submission_time.replace(tzinfo=timezone.utc)
+        logger.debug(f"Submission timestamp: {submission_time.isoformat()}")
 
         note_value = _get_excel_cell_value(ms_client, feature, excel_row, "Submit a Note")
         if not note_value:
@@ -230,38 +242,6 @@ def _render_success_response(deal_info, message="Operation completed successfull
         </html>
         """
     
-
-    template_content_2 = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Success</title>
-            <meta charset="utf-8">
-        </head>
-        <body>
-            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-            <h2 style="color: green;">✓ Success</h2>
-            <p>{{ message }}</p>
-            <br>
-            <p><strong>Row ID</strong> {{ deal_info.row_id|default:"" }}<br>
-            <strong>Deal ID</strong> {{ deal_info.deal_id|default:"" }}<br>
-            <strong>Deal Name</strong> {{ deal_info.deal_name|default:"" }}<br>
-            <strong>Note</strong> {{ deal_info.note|default:"" }}</p>
-            <br>
-            <p><small>This window will close automatically...</small></p>
-            </div>
-            <script>
-            setTimeout(() => {
-                try {
-                window.close();
-                } catch (e) {
-                document.body.innerHTML = '<div style="text-align: center; padding: 20px;"><h3>Please close this window</h3></div>';
-                }
-            }, 2000);
-            </script>
-        </body>
-        </html>
-        """
     
     template = Template(template_content)
     context = Context({'deal_info': deal_info or {}, 'message': message})
