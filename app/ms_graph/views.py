@@ -1,5 +1,8 @@
 import logging
 import time
+
+from datetime import datetime 
+
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, Http404
@@ -48,9 +51,16 @@ def excel_note_to_hubspot(request, signed_row):
 
         # logger.info(f"Processing Excel note to HubSpot for verified row {excel_row}")
 
+        current_time_stamp = datetime.now()
+
+        workbook_last_save_stamp = ms_client.get_worksheet_last_saved_timestamp(
+            workbook_item_id=feature.workbook_id, 
+            worksheet_name=feature.worksheet_name,
+        )
+
         excel_row = signed_row
 
-        time.sleep(5)
+        time.sleep(30)
 
         note_value = _get_excel_cell_value(ms_client, feature, excel_row, "Submit a Note")
         if not note_value:
@@ -78,6 +88,8 @@ def excel_note_to_hubspot(request, signed_row):
             "deal_name": deal_name,
             "deal_id": deal_id,
             "note": note_value,
+            "last_saved": workbook_last_save_stamp,
+            "submitted": current_time_stamp,
         }
 
         print(deal_info)
@@ -207,7 +219,9 @@ def _render_success_response(deal_info, message="Operation completed successfull
             <p><strong>Row ID</strong> {{ deal_info.row_id|default:"" }}<br>
             <strong>Deal ID</strong> {{ deal_info.deal_id|default:"" }}<br>
             <strong>Deal Name</strong> {{ deal_info.deal_name|default:"" }}<br>
-            <strong>Note</strong> {{ deal_info.note|default:"" }}</p>
+            <strong>Note</strong> {{ deal_info.note|default:"" }}<br>
+            <strong>Workbook Last Saved Timestamp</strong> {{deal_info.last_saved}}<br>
+            <strong>Submission happened at</strong> {{deal_info.submitted}}</p>
             <br>
             <p><small>This window will close automatically...</small></p>
             </div>
