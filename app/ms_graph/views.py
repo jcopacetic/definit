@@ -1,4 +1,5 @@
 import logging
+import time
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, Http404
@@ -48,6 +49,8 @@ def excel_note_to_hubspot(request, signed_row):
         # logger.info(f"Processing Excel note to HubSpot for verified row {excel_row}")
 
         excel_row = signed_row
+
+        time.sleep(5)
 
         note_value = _get_excel_cell_value(ms_client, feature, excel_row, "Submit a Note")
         if not note_value:
