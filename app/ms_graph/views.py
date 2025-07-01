@@ -69,7 +69,7 @@ def excel_note_to_hubspot(request, signed_row):
         logger.debug(f"Workbook last saved timestamp: {workbook_last_save_stamp.isoformat()}")
 
         # Parse submission time and make timezone-aware (assumed to be UTC)
-        submission_time = parser.parse(current_time_stamp)
+        submission_time = current_time_stamp
         if submission_time.tzinfo is None:
             submission_time = submission_time.replace(tzinfo=timezone.utc)
         logger.debug(f"Submission timestamp: {submission_time.isoformat()}")
