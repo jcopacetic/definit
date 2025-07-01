@@ -1406,3 +1406,118 @@ class MSGraphClient:
             
         # Get the cell value using the found column letter
         return self.get_cell_value(workbook_item_id, worksheet_id, row_number, column_letter, drive_id)
+    
+
+    def get_worksheet_last_saved_timestamp(self, workbook_item_id: str, worksheet_name: str = None, drive_id: str = None) -> Optional[str]:
+        """
+        Get the last saved timestamp of a worksheet (actually returns the workbook's last modified time
+        since individual worksheet timestamps aren't available via Graph API).
+        
+        Args:
+            workbook_item_id (str): The ID of the workbook item
+            worksheet_name (str, optional): The name of the worksheet (for validation)
+            drive_id (str, optional): The drive ID. Uses instance drive_id if not provided.
+            
+        Returns:
+            Optional[str]: The last modified timestamp in ISO format, None if not found
+        """
+        if not drive_id and not self.drive_id:
+            logger.error("Drive ID is required")
+            return None
+            
+        drive_id_to_use = drive_id or self.drive_id
+        
+        # If worksheet_name is provided, verify it exists first
+        if worksheet_name:
+            worksheet = self.get_worksheet_by_name(workbook_item_id, worksheet_name, drive_id_to_use)
+            if not worksheet:
+                logger.warning(f"Worksheet '{worksheet_name}' not found in workbook")
+                return None
+        
+        # Get the workbook item metadata which contains the last modified timestamp
+        try:
+            workbook_item = self.get_item_by_id(workbook_item_id, drive_id_to_use)
+            
+            if workbook_item and "lastModifiedDateTime" in workbook_item:
+                timestamp = workbook_item["lastModifiedDateTime"]
+                logger.info(f"Last saved timestamp for workbook: {timestamp}")
+                return timestamp
+            else:
+                logger.warning("Last modified timestamp not found in workbook metadata")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error retrieving last saved timestamp: {str(e)}")
+            return None
+
+    def get_workbook_last_saved_timestamp(self, workbook_name: str, folder_path: str = "", drive_id: str = None) -> Optional[str]:
+        """
+        Get the last saved timestamp of a workbook by name.
+        
+        Args:
+            workbook_name (str): The name of the workbook
+            folder_path (str, optional): Path to the folder. Default is root.
+            drive_id (str, optional): The drive ID. Uses instance drive_id if not provided.
+            
+        Returns:
+            Optional[str]: The last modified timestamp in ISO format, None if not found
+        """
+        workbook = self.get_workbook_by_name(workbook_name, folder_path, drive_id)
+        
+        if workbook and "lastModifiedDateTime" in workbook:
+            timestamp = workbook["lastModifiedDateTime"]
+            logger.info(f"Last saved timestamp for workbook '{workbook_name}': {timestamp}")
+            return timestamp
+        else:
+            logger.warning(f"Last modified timestamp not found for workbook '{workbook_name}'")
+            return None
+
+    def get_workbook_metadata(self, workbook_item_id: str, drive_id: str = None) -> Optional[Dict]:
+        """
+        Get comprehensive metadata for a workbook including timestamps and file properties.
+        
+        Args:
+            workbook_item_id (str): The ID of the workbook item
+            drive_id (str, optional): The drive ID. Uses instance drive_id if not provided.
+            
+        Returns:
+            Optional[Dict]: Dictionary containing metadata fields like:
+                - lastModifiedDateTime: When the file was last modified
+                - createdDateTime: When the file was created
+                - lastModifiedBy: Who last modified the file
+                - createdBy: Who created the file
+                - size: File size in bytes
+                - name: File name
+                - webUrl: Web URL to access the file
+        """
+        if not drive_id and not self.drive_id:
+            logger.error("Drive ID is required")
+            return None
+            
+        drive_id_to_use = drive_id or self.drive_id
+        
+        try:
+            workbook_item = self.get_item_by_id(workbook_item_id, drive_id_to_use)
+            
+            if workbook_item:
+                metadata = {
+                    'name': workbook_item.get('name'),
+                    'id': workbook_item.get('id'),
+                    'lastModifiedDateTime': workbook_item.get('lastModifiedDateTime'),
+                    'createdDateTime': workbook_item.get('createdDateTime'),
+                    'lastModifiedBy': workbook_item.get('lastModifiedBy', {}).get('user', {}).get('displayName'),
+                    'createdBy': workbook_item.get('createdBy', {}).get('user', {}).get('displayName'),
+                    'size': workbook_item.get('size'),
+                    'webUrl': workbook_item.get('webUrl'),
+                    'downloadUrl': workbook_item.get('@microsoft.graph.downloadUrl')
+                }
+                
+                logger.info(f"Retrieved metadata for workbook: {metadata.get('name')}")
+                return metadata
+            else:
+                logger.warning("Workbook metadata not found")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error retrieving workbook metadata: {str(e)}")
+            return None
