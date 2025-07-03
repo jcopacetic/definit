@@ -10,12 +10,59 @@ from django.http import HttpResponse, Http404
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import Template, Context
 from itsdangerous import TimestampSigner, BadSignature, SignatureExpired
+import time
+from datetime import datetime, timezone, timedelta
 
 from app.dashboard.models import Customer 
 from app.ms_graph.client import MSGraphClient 
 from app.hubspot.client import HubSpotClient
 
 logger = logging.getLogger(__name__)
+
+def wait_for_sheet_save(
+    ms_client,
+    workbook_item_id: str,
+    worksheet_name: str,
+    timeout: int = 60,
+    poll_interval: int = 5,
+) -> bool:
+    """
+    Polls OneDrive to wait until the Excel sheet has been saved after the current timestamp.
+
+    Args:
+        ms_client: Microsoft Graph client with method get_worksheet_last_saved_timestamp
+        workbook_item_id (str): OneDrive item ID of the workbook.
+        worksheet_name (str): Name of the worksheet to check.
+        timeout (int): Max seconds to wait before giving up.
+        poll_interval (int): How often to recheck, in seconds.
+
+    Returns:
+        bool: True if save detected, False if timeout exceeded.
+    """
+    start_time = datetime.now(timezone.utc)
+    deadline = start_time + timedelta(seconds=timeout)
+
+    logger.info("Polling for worksheet save after %s", start_time.isoformat())
+
+    while datetime.now(timezone.utc) < deadline:
+        try:
+            last_saved = ms_client.get_worksheet_last_saved_timestamp(
+                workbook_item_id=workbook_item_id,
+                worksheet_name=worksheet_name,
+            )
+            logger.debug("Last saved timestamp: %s", last_saved.isoformat())
+
+            if last_saved > start_time:
+                logger.info("Detected save after %s. Proceeding.", start_time.isoformat())
+                return True
+        except Exception as e:
+            logger.warning("Failed to get worksheet save timestamp: %s", e)
+
+        logger.debug("Waiting %s seconds before retrying...", poll_interval)
+        time.sleep(poll_interval)
+
+    logger.error("Timed out waiting for worksheet save after %s", start_time.isoformat())
+    return False
 
 
 def excel_note_to_hubspot(request, signed_row):
@@ -27,53 +74,70 @@ def excel_note_to_hubspot(request, signed_row):
     Returns:
         HttpResponse: HTML response with auto-close script
     """
-
     customer, feature = _get_customer_and_feature()
     if not customer or not feature:
         return _render_error_response("Customer or feature configuration not found")
+
     logger.info(f"Using customer: {customer.id}, feature: {feature.id}")
 
     try:
         ms_client = MSGraphClient(customer)
     except Exception as e:
-        logger.error(f"Failed to initialize MS Graph client: {str(e)}")
+        logger.error(f"Failed to initialize MS Graph client: {e}")
         return _render_error_response("Failed to connect to Microsoft Graph")
+
+    # # Verify the signature and extract the row number
+    # excel_row = ms_client._verify_signed_row(signed_row, settings.SECRET_KEY)
+    
+    # if excel_row is None:
+    #     logger.error(f"Invalid or expired signature: {signed_row}")
+    #     return _render_error_response("Invalid or expired link")
+
+    # if excel_row < 1:
+    #     logger.error(f"Excel row must be positive: {excel_row}")
+    #     return _render_error_response("Row number must be positive")
+
+    # logger.info(f"Processing Excel note to HubSpot for verified row {excel_row}")
+
+    
     try:
-        # # Verify the signature and extract the row number
-        # excel_row = ms_client._verify_signed_row(signed_row, settings.SECRET_KEY)
-        
-        # if excel_row is None:
-        #     logger.error(f"Invalid or expired signature: {signed_row}")
-        #     return _render_error_response("Invalid or expired link")
-
-        # if excel_row < 1:
-        #     logger.error(f"Excel row must be positive: {excel_row}")
-        #     return _render_error_response("Row number must be positive")
-
-        # logger.info(f"Processing Excel note to HubSpot for verified row {excel_row}")
-
-        
         current_time_stamp = datetime.now(timezone.utc)
 
-        excel_row = signed_row
-
-        time.sleep(30)
-
-        workbook_last_save_stamp = ms_client.get_worksheet_last_saved_timestamp(
-            workbook_item_id=feature.workbook_id, 
+        # Wait for Excel save to finish after user click
+        sheet_ready = wait_for_sheet_save(
+            ms_client,
+            workbook_item_id=feature.workbook_id,
             worksheet_name=feature.worksheet_name,
+            timeout=60,
+            poll_interval=5,
         )
 
+        if not sheet_ready:
+            return _render_error_response("Excel sheet not saved in time. Please try again.")
+
+        # Extract Excel row (signed_row is assumed safe, but normally should be verified)
+        excel_row = signed_row  # Replace with signature verification if needed
+
+        logger.info(f"Processing Excel note to HubSpot for row: {excel_row}")
+
+        # Get last save timestamp for logging/reporting
+        workbook_last_save_stamp = ms_client.get_worksheet_last_saved_timestamp(
+            workbook_item_id=feature.workbook_id,
+            worksheet_name=feature.worksheet_name,
+        )
         if isinstance(workbook_last_save_stamp, str):
             workbook_last_save_stamp = parser.isoparse(workbook_last_save_stamp)
+
         logger.debug(f"Workbook last saved timestamp: {workbook_last_save_stamp.isoformat()}")
 
-        # Parse submission time and make timezone-aware (assumed to be UTC)
+        # Ensure current timestamp is timezone-aware (should already be)
         submission_time = current_time_stamp
         if submission_time.tzinfo is None:
             submission_time = submission_time.replace(tzinfo=timezone.utc)
+
         logger.debug(f"Submission timestamp: {submission_time.isoformat()}")
 
+        # Read data from Excel
         note_value = _get_excel_cell_value(ms_client, feature, excel_row, "Submit a Note")
         if not note_value:
             logger.info(f"No note value found in row {excel_row}")
@@ -89,10 +153,12 @@ def excel_note_to_hubspot(request, signed_row):
 
         logger.info(f"Processing deal ID: {deal_id}")
 
+        # Send note to HubSpot
         success = _create_hubspot_note(customer, deal_id, note_value)
         if not success:
             return _render_error_response("Failed to create note in HubSpot")
 
+        # Clear the "Submit a Note" cell after processing
         _clear_excel_cell(ms_client, feature, excel_row)
 
         deal_info = {
@@ -101,15 +167,16 @@ def excel_note_to_hubspot(request, signed_row):
             "deal_id": deal_id,
             "note": note_value,
             "last_saved": workbook_last_save_stamp.strftime("%Y-%m-%d %H:%M:%S.") + f"{int(workbook_last_save_stamp.microsecond / 1000):03d}",
-            "submitted": current_time_stamp.strftime("%Y-%m-%d %H:%M:%S.") + f"{int(current_time_stamp.microsecond / 1000):03d}",
+            "submitted": submission_time.strftime("%Y-%m-%d %H:%M:%S.") + f"{int(submission_time.microsecond / 1000):03d}",
         }
 
         logger.info(f"Successfully processed note for deal {deal_id}")
         return _render_success_response(deal_info, "Note submitted successfully")
 
     except Exception as e:
-        logger.error(f"Unexpected error in excel_note_to_hubspot: {str(e)}", exc_info=True)
+        logger.error(f"Unexpected error in excel_note_to_hubspot: {e}", exc_info=True)
         return _render_error_response("An unexpected error occurred")
+    
     
 
 def _get_signer():
