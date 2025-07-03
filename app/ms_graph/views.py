@@ -46,15 +46,24 @@ def wait_for_sheet_save(
 
     while datetime.now(timezone.utc) < deadline:
         try:
-            last_saved = ms_client.get_worksheet_last_saved_timestamp(
+            last_saved_raw = ms_client.get_worksheet_last_saved_timestamp(
                 workbook_item_id=workbook_item_id,
                 worksheet_name=worksheet_name,
             )
-            logger.debug("Last saved timestamp: %s", last_saved.isoformat())
 
-            if last_saved > start_time:
-                logger.info("Detected save after %s. Proceeding.", start_time.isoformat())
-                return True
+            try:
+                last_saved = parser.isoparse(last_saved_raw) if isinstance(last_saved_raw, str) else last_saved_raw
+            except Exception as parse_err:
+                logger.warning("Could not parse last saved timestamp: %s", parse_err)
+                last_saved = None
+
+            if last_saved:
+                logger.debug("Last saved timestamp: %s", last_saved.isoformat())
+
+                if last_saved > start_time:
+                    logger.info("Detected save after %s. Proceeding.", start_time.isoformat())
+                    return True
+
         except Exception as e:
             logger.warning("Failed to get worksheet save timestamp: %s", e)
 
