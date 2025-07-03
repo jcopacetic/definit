@@ -51,6 +51,9 @@ def wait_for_sheet_save(
                 worksheet_name=worksheet_name,
             )
 
+            
+            print(f"\n\n\nstart time: {start_time} | deadline: {deadline} | last saved: {last_saved_raw}\n\n\n")
+
             try:
                 last_saved = parser.isoparse(last_saved_raw) if isinstance(last_saved_raw, str) else last_saved_raw
             except Exception as parse_err:
@@ -117,7 +120,7 @@ def excel_note_to_hubspot(request, signed_row):
             ms_client,
             workbook_item_id=feature.workbook_id,
             worksheet_name=feature.worksheet_name,
-            timeout=60,
+            timeout=200,
             poll_interval=5,
         )
 
