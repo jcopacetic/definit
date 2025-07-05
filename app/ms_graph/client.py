@@ -1158,7 +1158,7 @@ class MSGraphClient:
             # Generate signed URL
             # signed_url = self._generate_signed_url(row_to_update, settings.SECRET_KEY)
             # update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/{row_to_update}/", "update")'
-            update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/" & ROW() & "/", "update")'
+            #update_link_formula = f'=HYPERLINK("https://integration00.definit.com/excel/excel-note-to-hubspot/" & ROW() & "/", "update")'
 
             values = [
                 [
@@ -1172,7 +1172,6 @@ class MSGraphClient:
                     data_to_add["deal_stage"],
                     data_to_add["deal_owner"],
                     "",
-                    update_link_formula,
                     amount_parse,
                     data_to_add["last_contacted"],
                     data_to_add["last_contacted_type"],
@@ -1186,7 +1185,7 @@ class MSGraphClient:
                 ]
             ]
 
-            target_range = f"A{row_to_update}:U{row_to_update}"
+            target_range = f"A{row_to_update}:T{row_to_update}"
             url = f"{self.items_path}/{workbook_id}/workbook/worksheets/{worksheet_name}/range(address='{target_range}')"
             body = {"values": values}
 
