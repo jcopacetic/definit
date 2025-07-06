@@ -905,6 +905,8 @@ class HubSpotClient:
             params["associationType"] = association_type_id
         
         response = self._make_request(url, "GET", params=params)
+
+        print(f"\n\n\n{response}\n\n\n")
         
         if not response:
             return None
