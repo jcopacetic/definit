@@ -450,6 +450,8 @@ def hubspot_to_msgraph_webhook_listener(request):
             for event in payload:
                 event_id = event.get("eventId", "unknown")
                 event_type = event.get("subscriptionType", "unknown")
+                event_object_type_id = event.get("objectTypeId", "unknown")
+                event_object_id = event.get("objectId", "unknown")
                 logger.info(f"[{request_id}] Processing HubSpot event {event_id} of type {event_type}")
         else:
             event_id = payload.get("eventId", "unknown")
@@ -463,6 +465,61 @@ def hubspot_to_msgraph_webhook_listener(request):
         return JsonResponse({"error": str(e)}, status=400)
 
     # --- Step 6: Handle specific event types ---
+
+    print(f"\n\n\n{event_type} - {event_id} - {event_object_type_id} - {event_object_id}\n\n\n")
+
+    if event_type == "object.creation":
+        hs_client = HubSpotClient(customer.hubspot_secret_app_key)
+
+        # Mapping of object type to association ID
+        object_assoc_map = {
+            "0-46": "214",  # Notes
+            "0-27": "216",  # Tasks
+            "0-48": "206",  # Calls
+            "0-49": "210",  # Emails
+            "0-53": "175",  # Invoices
+            "0-14": "64",   # Quotes
+            "0-47": "212",  # Meetings
+            "0-18": "85",   # Communications (sms, linkedin, whatsapp)
+        }
+
+        assoc_id = object_assoc_map.get(event_object_type_id)
+
+        if not assoc_id:
+            logger.warning(f"[{request_id}] Unknown event_object_type_id: {event_object_type_id}")
+            return JsonResponse(
+                {"status": "ignored", "message": "Unrecognized object type"},
+                status=400
+            )
+
+        try:
+            associated_deal_ids = hs_client.get_associations(
+                event_object_type_id,
+                event_object_id,
+                "0-3",
+                assoc_id,
+            )
+        except Exception as e:
+            logger.exception(f"[{request_id}] Error fetching associations: {e}")
+            return JsonResponse({"error": "HubSpot fetch failure", "message": str(e)}, status=500)
+
+        if not associated_deal_ids:
+            logger.info(f"[{request_id}] No associated deals found for object ID {event_object_id}")
+            return JsonResponse({"status": "noop", "message": "No associated deals found"})
+
+        for deal_id in associated_deal_ids:
+            try:
+                success, message = process_deal_stage_change(customer, deal_id, payload)
+                if success:
+                    logger.info(f"[{request_id}] Deal stage processed successfully: {message}")
+                    return JsonResponse({"status": "success", "message": message})
+                else:
+                    logger.error(f"[{request_id}] Deal stage processing failed: {message}")
+                    return JsonResponse({"status": "error", "message": message}, status=500)
+            except Exception as e:
+                logger.exception(f"[{request_id}] Error during deal stage processing: {e}")
+                return JsonResponse({"error": "Processing failure", "message": str(e)}, status=500)
+
     if event_type in ["deal.propertyChange", "deal.creation", "deal.associationChange"]:
         try:
             success, message = process_deal_stage_change(customer, object_id, payload)
