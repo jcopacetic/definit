@@ -5,6 +5,9 @@ import time
 import re
 from datetime import datetime
 
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
+
 from bs4 import BeautifulSoup as bs
 
 logger = logging.getLogger(__name__)
@@ -864,3 +867,55 @@ class HubSpotClient:
         except Exception as e:
             logger.exception("Error while building deals-emails collection")
             return None
+
+    def create_association(self, from_object_type, from_object_id, to_object_type, to_object_id, association_type_id):
+        """
+        Create an association between two HubSpot objects
+        
+        Args:
+            from_object_type: Source object type (contacts, companies, deals, etc.)
+            from_object_id: ID of the source object
+            to_object_type: Target object type
+            to_object_id: ID of the target object
+            association_type_id: Association type ID (required)
+        """
+        url = f"{self.BASE_URL}/crm/v4/objects/{from_object_type}/{from_object_id}/associations/{to_object_type}/{to_object_id}"
+        
+        body = [{"associationCategory": "HUBSPOT_DEFINED", "associationTypeId": association_type_id}]
+        
+        return self._make_request(url, "PUT", body=body)
+    
+    def get_associations(self, from_object_type, from_object_id, to_object_type, association_type_id=None):
+        """
+        Get associations between two HubSpot objects
+        
+        Args:
+            from_object_type: Source object type (contacts, companies, deals, etc.)
+            from_object_id: ID of the source object
+            to_object_type: Target object type (contacts, companies, deals, etc.)
+            association_type_id: Optional association type ID to filter by specific association type
+        
+        Returns:
+            List of associated object IDs or None if error
+        """
+        url = f"{self.BASE_URL}/crm/v4/objects/{from_object_type}/{from_object_id}/associations/{to_object_type}"
+        
+        params = {}
+        if association_type_id:
+            params["associationType"] = association_type_id
+        
+        response = self._make_request(url, "GET", params=params)
+        
+        if not response:
+            return None
+            
+        results = response.get("results", [])
+        
+        # Extract the associated object IDs
+        associated_ids = []
+        for result in results:
+            object_id = result.get("toObjectId") or result.get("id")
+            if object_id:
+                associated_ids.append(object_id)
+        
+        return associated_ids
